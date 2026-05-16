@@ -1,4 +1,4 @@
-export type CollectionKey = "accessories" | "bridal" | "quinceanera" | "prom-formal" | "shoes-bags";
+export type CollectionKey = "accessories" | "bridal" | "quinceanera" | "prom-formal" | "evening" | "shoes-bags";
 
 export type CollectionSection = {
   key: CollectionKey;

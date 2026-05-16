@@ -2,6 +2,37 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { VAULT_COLLECTIONS } from "@/lib/vault";
 
+function DressSilhouette({ index }: { index: number }) {
+  const hue = index % 2 === 0 ? "#f4e3bb" : "#d9b878";
+
+  return (
+    <svg viewBox="0 0 260 300" className="h-full w-full" aria-hidden="true">
+      <defs>
+        <linearGradient id={`silk-${index}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={hue} stopOpacity="0.95" />
+          <stop offset="70%" stopColor="#b58f42" stopOpacity="0.8" />
+          <stop offset="100%" stopColor="#7b5a23" stopOpacity="0.7" />
+        </linearGradient>
+        <radialGradient id={`glow-${index}`} cx="50%" cy="38%" r="52%">
+          <stop offset="0%" stopColor="#fff5da" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      <rect x="0" y="0" width="260" height="300" fill={`url(#glow-${index})`} />
+      <path
+        d="M130 28 C115 30, 110 45, 111 56 C112 72, 104 83, 90 93 C74 104, 56 130, 52 173 C48 220, 72 255, 130 275 C188 255, 212 220, 208 173 C204 130, 186 104, 170 93 C156 83, 148 72, 149 56 C150 45, 145 30, 130 28 Z"
+        fill={`url(#silk-${index})`}
+        opacity="0.92"
+      />
+      <path d="M130 50 L130 272" stroke="#fff1c8" strokeOpacity="0.3" strokeWidth="2" />
+      <path d="M95 103 C116 112, 144 112, 165 103" stroke="#f7e7bd" strokeOpacity="0.45" strokeWidth="2" fill="none" />
+      <path d="M84 145 C113 158, 147 158, 176 145" stroke="#f7e7bd" strokeOpacity="0.28" strokeWidth="2" fill="none" />
+      <circle cx="130" cy="26" r="6" fill="#d7b56e" opacity="0.95" />
+    </svg>
+  );
+}
+
 export default async function CollectionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const collection = VAULT_COLLECTIONS.find((item) => item.key === slug);
@@ -22,7 +53,9 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
         <div className="grid gap-4 md:grid-cols-3">
           {Array.from({ length: 6 }, (_, index) => (
             <article key={index} className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-              <div className="h-52 rounded-[1.25rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(201,168,76,0.08))]" />
+              <div className="h-52 overflow-hidden rounded-[1.25rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(201,168,76,0.08))]">
+                <DressSilhouette index={index} />
+              </div>
               <div className="mt-4 flex items-center justify-between text-xs uppercase tracking-[0.3em] text-white/55">
                 <span>{collection.description}</span>
                 <span>{index + 1}</span>

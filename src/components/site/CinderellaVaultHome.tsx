@@ -134,17 +134,17 @@ function DoorPanel({ side, isOpen }: { side: "left" | "right"; isOpen: boolean }
         className="absolute inset-0"
         style={{
           background: `
-            repeating-linear-gradient(179deg,rgba(42,22,8,0) 0px,rgba(42,22,8,0) 3px,rgba(72,38,12,0.22) 4px,rgba(42,22,8,0) 5px),
-            repeating-linear-gradient(181deg,rgba(90,48,16,0) 0px,rgba(90,48,16,0) 6px,rgba(110,62,20,0.16) 7px,rgba(90,48,16,0) 8px),
-            linear-gradient(180deg,#3b1e0c 0%,#4e2810 18%,#5d3214 38%,#4a2510 55%,#3d1f0d 72%,#2e160a 88%,#231208 100%)
+            repeating-linear-gradient(179deg,rgba(36,18,6,0) 0px,rgba(36,18,6,0) 2px,rgba(124,70,22,0.34) 3px,rgba(36,18,6,0) 4px),
+            repeating-linear-gradient(181deg,rgba(92,52,18,0) 0px,rgba(92,52,18,0) 5px,rgba(154,94,38,0.24) 6px,rgba(92,52,18,0) 7px),
+            linear-gradient(180deg,#4a2711 0%,#6a3a18 18%,#794620 38%,#6b3a1b 55%,#562d14 72%,#43220f 88%,#31190b 100%)
           `,
         }}
       />
       {/* outer gold border */}
-      <div className="pointer-events-none absolute inset-0 border-4 border-[#C9A84C] shadow-[inset_0_0_0_2px_rgba(255,235,160,0.3)]" />
+      <div className="pointer-events-none absolute inset-0 border-4 border-[#C9A84C] shadow-[inset_0_0_0_2px_rgba(255,235,160,0.55),0_0_14px_rgba(201,168,76,0.45)]" />
       {/* top molding panel */}
-      <div className="absolute left-2.5 right-2.5 top-2.5 h-[26%] border-2 border-[#C9A84C]/75 bg-[rgba(201,168,76,0.06)]">
-        <div className="absolute inset-1 border border-[#C9A84C]/40" />
+      <div className="absolute left-2.5 right-2.5 top-2.5 h-[26%] border-2 border-[#C9A84C]/90 bg-[rgba(201,168,76,0.1)]">
+        <div className="absolute inset-1 border border-[#C9A84C]/58" />
         <div className="absolute inset-0 flex items-center justify-center">
           <svg viewBox="0 0 48 48" className="h-8 w-8 opacity-65">
             <circle cx="24" cy="24" r="3.5" fill="#C9A84C" />
@@ -156,14 +156,14 @@ function DoorPanel({ side, isOpen }: { side: "left" | "right"; isOpen: boolean }
         </div>
       </div>
       {/* center molding panel */}
-      <div className="absolute bottom-[15%] left-2.5 right-2.5 top-[30%] border-2 border-[#C9A84C]/75 bg-[rgba(201,168,76,0.04)]">
-        <div className="absolute inset-1 border border-[#C9A84C]/35" />
-        <div className="absolute inset-y-2 left-1/2 w-px -translate-x-1/2 bg-[#C9A84C]/25" />
-        <div className="absolute inset-x-2 top-1/2 h-px -translate-y-1/2 bg-[#C9A84C]/25" />
+      <div className="absolute bottom-[15%] left-2.5 right-2.5 top-[30%] border-2 border-[#C9A84C]/90 bg-[rgba(201,168,76,0.08)]">
+        <div className="absolute inset-1 border border-[#C9A84C]/52" />
+        <div className="absolute inset-y-2 left-1/2 w-px -translate-x-1/2 bg-[#C9A84C]/45" />
+        <div className="absolute inset-x-2 top-1/2 h-px -translate-y-1/2 bg-[#C9A84C]/45" />
       </div>
       {/* bottom molding panel */}
-      <div className="absolute bottom-2.5 left-2.5 right-2.5 h-[13%] border-2 border-[#C9A84C]/75 bg-[rgba(201,168,76,0.06)]">
-        <div className="absolute inset-1 border border-[#C9A84C]/40" />
+      <div className="absolute bottom-2.5 left-2.5 right-2.5 h-[13%] border-2 border-[#C9A84C]/90 bg-[rgba(201,168,76,0.1)]">
+        <div className="absolute inset-1 border border-[#C9A84C]/58" />
       </div>
       {/* door handle + keyhole on inner edge */}
       <div
@@ -180,7 +180,7 @@ function DoorPanel({ side, isOpen }: { side: "left" | "right"; isOpen: boolean }
       </div>
       {/* center seam gold line */}
       <div
-        className="absolute inset-y-0 w-0.5 bg-gradient-to-b from-[#C9A84C]/10 via-[#C9A84C] to-[#C9A84C]/10"
+        className="absolute inset-y-0 w-0.5 bg-gradient-to-b from-[#ffe8a8]/35 via-[#C9A84C] to-[#ffe8a8]/35"
         style={{ [isLeft ? "right" : "left"]: 0 }}
       />
       {/* inner glow seam pulse */}
@@ -202,6 +202,7 @@ const SECTION_ICONS: Record<CollectionKey, string> = {
   bridal: "🤍",
   quinceanera: "🌸",
   "prom-formal": "✨",
+  evening: "🌙",
   "shoes-bags": "👠",
 };
 
@@ -221,7 +222,7 @@ function SectionCard({ section, onClick }: { section: CollectionSection; onClick
       style={{
         background: hovered
           ? "linear-gradient(135deg,rgba(201,168,76,0.2) 0%,rgba(201,168,76,0.07) 100%)"
-          : "linear-gradient(135deg,rgba(38,24,8,0.9) 0%,rgba(22,13,4,0.95) 100%)",
+          : "linear-gradient(135deg,rgba(60,38,12,0.85) 0%,rgba(30,18,6,0.92) 100%)",
         boxShadow: hovered
           ? "0 0 22px rgba(201,168,76,0.4),inset 0 0 10px rgba(201,168,76,0.1)"
           : "0 2px 10px rgba(0,0,0,0.45)",
@@ -295,7 +296,7 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
   // Ordered layout
   const topSection = collections.find((c) => c.key === "accessories");
   const midSections = collections.filter((c) =>
-    ["bridal", "quinceanera", "prom-formal"].includes(c.key),
+    ["bridal", "quinceanera", "prom-formal", "evening"].includes(c.key),
   );
   const bottomSection = collections.find((c) => c.key === "shoes-bags");
 
@@ -524,7 +525,7 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
                 </motion.div>
               )}
 
-              <div className="mb-2.5 grid grid-cols-3 gap-2 sm:gap-3">
+              <div className="mb-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
                 {midSections.map((s, i) => (
                   <motion.div
                     key={s.key}

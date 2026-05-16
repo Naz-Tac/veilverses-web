@@ -42,6 +42,16 @@ export const VAULT_COLLECTIONS: CollectionSection[] = [
     accent: "#f3c77a",
   },
   {
+    key: "evening",
+    label: "EVENING",
+    itemCount: 24,
+    description: "Cocktail and black-tie gowns",
+    position: [4.45, -0.18, 0],
+    size: [2.0, 3.15, 0.3],
+    route: "/collections/evening",
+    accent: "#caa7f2",
+  },
+  {
     key: "shoes-bags",
     label: "THE GLASS SLIPPER COLLECTION",
     itemCount: 24,
