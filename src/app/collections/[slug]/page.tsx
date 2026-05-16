@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { VAULT_COLLECTIONS } from "@/lib/vault";
+import { getSupabaseServerClient } from "@/lib/supabase/server";
 
 function DressSilhouette({ index }: { index: number }) {
   const hue = index % 2 === 0 ? "#f4e3bb" : "#d9b878";
@@ -33,6 +34,16 @@ function DressSilhouette({ index }: { index: number }) {
   );
 }
 
+function getPlaceholderKey(slug: string) {
+  if (slug === "prom-formal") {
+    return "prom";
+  }
+  if (slug === "shoes-bags") {
+    return "accessories";
+  }
+  return slug;
+}
+
 export default async function CollectionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const collection = VAULT_COLLECTIONS.find((item) => item.key === slug);
@@ -40,6 +51,12 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
   if (!collection) {
     notFound();
   }
+
+  const supabase = getSupabaseServerClient(true) ?? getSupabaseServerClient(false);
+  const imageKey = getPlaceholderKey(collection.key);
+  const placeholderUrl = supabase
+    ? supabase.storage.from("placeholders").getPublicUrl(`${imageKey}.png`).data.publicUrl
+    : null;
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#2a241b_0%,#090808_50%,#050404_100%)] px-6 py-10 text-white">
@@ -53,8 +70,14 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
         <div className="grid gap-4 md:grid-cols-3">
           {Array.from({ length: 6 }, (_, index) => (
             <article key={index} className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-              <div className="h-52 overflow-hidden rounded-[1.25rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(201,168,76,0.08))]">
-                <DressSilhouette index={index} />
+              <div
+                className="relative h-52 overflow-hidden rounded-[1.25rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(201,168,76,0.08))] bg-cover bg-center"
+                style={placeholderUrl ? { backgroundImage: `url(${placeholderUrl})` } : undefined}
+              >
+                <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/55" />
+                <div className="absolute inset-0 opacity-35">
+                  <DressSilhouette index={index} />
+                </div>
               </div>
               <div className="mt-4 flex items-center justify-between text-xs uppercase tracking-[0.3em] text-white/55">
                 <span>{collection.description}</span>
