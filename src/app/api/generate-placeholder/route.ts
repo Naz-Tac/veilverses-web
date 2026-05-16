@@ -6,40 +6,64 @@ import type { Database } from "@/lib/supabase/database.types";
 
 export const runtime = "nodejs";
 
-type PlaceholderKey = "bridal" | "quinceanera" | "prom" | "evening" | "accessories";
+type PlaceholderKey = "bridal" | "quinceanera" | "prom-formal" | "evening" | "accessories";
 
 const PROMPTS: Record<PlaceholderKey, string> = {
   bridal:
-    "elegant bride wearing a white A-line wedding gown with lace details, studio photography, luxury boutique, white background",
+    "full-body fashion model in a white A-line bridal gown with lace sleeves, soft studio lighting, boutique editorial photography",
   quinceanera:
-    "young woman in a pink ballgown quinceanera dress with rhinestones, studio photo",
-  prom: "teenage girl in emerald green fitted prom dress, professional photography",
-  evening: "woman in black velvet evening gown, luxury fashion editorial",
-  accessories: "luxury bridal accessories, tiara veil jewelry flat lay, gold and white",
+    "full-body fashion model wearing a dramatic pink quinceanera ballgown with beading, high-end studio portrait, clean backdrop",
+  "prom-formal":
+    "full-body fashion model in an emerald fitted prom evening dress, modern fashion campaign look, studio lighting",
+  evening:
+    "full-body fashion model in a black velvet black-tie evening gown, luxury editorial fashion shoot, neutral background",
+  accessories:
+    "fashion model styled with bridal accessories including tiara, veil, and statement jewelry, luxury studio editorial",
 };
 
 function getOutputUrl(output: unknown): string | null {
-  if (typeof output === "string" && output.startsWith("http")) {
-    return output;
+  const asHttpString = (value: unknown): string | null => {
+    if (typeof value === "string" && value.startsWith("http")) {
+      return value;
+    }
+
+    if (value && typeof value === "object") {
+      const maybeUrlFn = (value as { url?: unknown }).url;
+      if (typeof maybeUrlFn === "function") {
+        try {
+          const resolved = maybeUrlFn.call(value) as unknown;
+          if (typeof resolved === "string" && resolved.startsWith("http")) {
+            return resolved;
+          }
+        } catch {
+          // Ignore and continue with other extraction strategies.
+        }
+      }
+
+      const maybeUrl = (value as { url?: unknown }).url;
+      if (typeof maybeUrl === "string" && maybeUrl.startsWith("http")) {
+        return maybeUrl;
+      }
+
+      const asString = String(value);
+      if (asString.startsWith("http")) {
+        return asString;
+      }
+    }
+
+    return null;
+  };
+
+  const direct = asHttpString(output);
+  if (direct) {
+    return direct;
   }
 
   if (Array.isArray(output)) {
     const first = output[0];
-    if (typeof first === "string" && first.startsWith("http")) {
-      return first;
-    }
-    if (first && typeof first === "object" && "url" in first) {
-      const url = (first as { url?: unknown }).url;
-      if (typeof url === "string" && url.startsWith("http")) {
-        return url;
-      }
-    }
-  }
-
-  if (output && typeof output === "object" && "url" in output) {
-    const url = (output as { url?: unknown }).url;
-    if (typeof url === "string" && url.startsWith("http")) {
-      return url;
+    const firstUrl = asHttpString(first);
+    if (firstUrl) {
+      return firstUrl;
     }
   }
 

@@ -35,9 +35,6 @@ function DressSilhouette({ index }: { index: number }) {
 }
 
 function getPlaceholderKey(slug: string) {
-  if (slug === "prom-formal") {
-    return "prom";
-  }
   if (slug === "shoes-bags") {
     return "accessories";
   }
