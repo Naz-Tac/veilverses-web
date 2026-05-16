@@ -21,6 +21,50 @@ const PROMPTS: Record<PlaceholderKey, string> = {
     "fashion model styled with bridal accessories including tiara, veil, and statement jewelry, luxury studio editorial",
 };
 
+const INTER_IMAGE_DELAY_MS = 2000;
+const RETRY_DELAY_MS = 5000;
+const MAX_RETRIES_PER_IMAGE = 3;
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isReplicate429Error(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const maybeStatus = (error as { status?: unknown }).status;
+  if (maybeStatus === 429) {
+    return true;
+  }
+
+  const message = (error as { message?: unknown }).message;
+  return typeof message === "string" && /429|too many requests/i.test(message);
+}
+
+async function with429Retry<T>(task: () => Promise<T>, key: PlaceholderKey): Promise<T> {
+  let attempt = 0;
+
+  while (attempt <= MAX_RETRIES_PER_IMAGE) {
+    try {
+      return await task();
+    } catch (error) {
+      if (!isReplicate429Error(error) || attempt === MAX_RETRIES_PER_IMAGE) {
+        throw error;
+      }
+
+      attempt += 1;
+      console.warn(
+        `[generate-placeholder] Replicate 429 for ${key}. Retry ${attempt}/${MAX_RETRIES_PER_IMAGE} in ${RETRY_DELAY_MS}ms.`,
+      );
+      await sleep(RETRY_DELAY_MS);
+    }
+  }
+
+  throw new Error(`Retry loop exhausted for ${key}`);
+}
+
 function getOutputUrl(output: unknown): string | null {
   const asHttpString = (value: unknown): string | null => {
     if (typeof value === "string" && value.startsWith("http")) {
@@ -166,16 +210,51 @@ export async function POST() {
       sourceUrl: string;
       publicUrl: string;
     }>;
+    const skipped = [] as Array<{ key: PlaceholderKey; objectPath: string }>;
+
+    const existingObjects = await supabase.storage.from(bucketName).list("", {
+      limit: 100,
+      offset: 0,
+      sortBy: { column: "name", order: "asc" },
+    });
+    if (existingObjects.error) {
+      throw new Error(
+        `Unable to list existing objects in storage bucket '${bucketName}': ${existingObjects.error.message}`,
+      );
+    }
+
+    const existingNames = new Set(
+      existingObjects.data
+        .map((item) => item.name)
+        .filter((name): name is string => typeof name === "string" && name.length > 0),
+    );
+
+    let generatedCount = 0;
 
     for (const [key, prompt] of entries) {
-      const generated = await generateAndUpload(replicate, supabase, key, prompt);
+      const objectPath = `${key}.png`;
+      if (existingNames.has(objectPath)) {
+        skipped.push({ key, objectPath });
+        continue;
+      }
+
+      if (generatedCount > 0) {
+        await sleep(INTER_IMAGE_DELAY_MS);
+      }
+
+      const generated = await with429Retry(
+        () => generateAndUpload(replicate, supabase, key, prompt),
+        key,
+      );
       results.push(generated);
+      generatedCount += 1;
     }
 
     return NextResponse.json({
       ok: true,
       bucket: "placeholders",
       generated: results,
+      skipped,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";
