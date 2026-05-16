@@ -360,12 +360,15 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
               </div>
             </motion.div>
 
-            {/* The door */}
-            <motion.div
+            {/* The door - clickable entire panel */}
+            <motion.button
+              type="button"
+              onClick={handleEnter}
+              disabled={isOpening}
               initial={{ opacity: 0, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, delay: 0.38 }}
-              className="relative mx-auto w-[min(300px,80vw)]"
+              className="relative mx-auto w-[min(280px,70vw)] cursor-pointer border-0 bg-transparent p-0 disabled:cursor-not-allowed"
               style={{ perspective: "900px" }}
             >
               {/* outer gold frame */}
@@ -393,7 +396,7 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
                 </div>
 
                 {/* two door panels */}
-                <div className="relative flex h-[380px] sm:h-[440px]" style={{ transformStyle: "preserve-3d" }}>
+                <div className="relative flex h-[280px] sm:h-[340px]" style={{ transformStyle: "preserve-3d" }}>
                   {/* golden seam glow */}
                   <motion.div
                     animate={{
@@ -418,6 +421,7 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
                   style={{ background: "linear-gradient(180deg,#4e2810 0%,#2e160a 100%)" }}
                 />
               </div>
+            </motion.button>
 
               {/* golden light burst when opening */}
               <AnimatePresence>

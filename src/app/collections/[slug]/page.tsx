@@ -51,13 +51,21 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
 
   const supabase = getSupabaseServerClient(true) ?? getSupabaseServerClient(false);
   const imageKey = getPlaceholderKey(collection.key);
-  const placeholderUrl = supabase
-    ? supabase.storage.from("placeholders").getPublicUrl(`${imageKey}.png`).data.publicUrl
-    : null;
+  const placeholderUrls = supabase
+    ? Array.from({ length: 6 }, (_, i) =>
+        supabase.storage.from("placeholders").getPublicUrl(`${imageKey}-${i + 1}.png`).data.publicUrl,
+      )
+    : Array(6).fill(null);
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,#2a241b_0%,#090808_50%,#050404_100%)] px-6 py-10 text-white">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 rounded-[2rem] border border-white/10 bg-black/20 p-8 backdrop-blur-md md:p-12">
+        <Link
+          href="/"
+          className="w-fit text-xs uppercase tracking-[0.38em] text-[#e2c66b]/75 transition hover:text-[#e2c66b]"
+        >
+          ← THE VAULT
+        </Link>
         <div>
           <p className="text-xs uppercase tracking-[0.45em] text-[#e2c56a]">The Vault</p>
           <h1 className="mt-4 font-serif text-5xl text-[#fff8df] md:text-6xl">{collection.label}</h1>
@@ -69,16 +77,15 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
             <article key={index} className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
               <div
                 className="relative h-52 overflow-hidden rounded-[1.25rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.14),rgba(201,168,76,0.08))] bg-cover bg-center"
-                style={placeholderUrl ? { backgroundImage: `url(${placeholderUrl})` } : undefined}
+                style={placeholderUrls[index] ? { backgroundImage: `url(${placeholderUrls[index]})` } : undefined}
               >
                 <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/55" />
                 <div className="absolute inset-0 opacity-35">
                   <DressSilhouette index={index} />
                 </div>
               </div>
-              <div className="mt-4 flex items-center justify-between text-xs uppercase tracking-[0.3em] text-white/55">
-                <span>{collection.description}</span>
-                <span>{index + 1}</span>
+              <div className="mt-4 text-xs uppercase tracking-[0.3em] text-white/55">
+                Style {String(index + 1).padStart(3, "0")}
               </div>
             </article>
           ))}
@@ -88,9 +95,6 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
           <Link href="/" className="rounded-full border border-[#e2c66b]/50 px-6 py-3 text-xs uppercase tracking-[0.38em] text-[#f8eabf] transition hover:bg-[#e2c66b]/10">
             Return to The Vault
           </Link>
-          <span className="rounded-full border border-white/10 px-4 py-2 text-[10px] uppercase tracking-[0.35em] text-white/60">
-            Accent {collection.accent}
-          </span>
         </div>
       </div>
     </main>
