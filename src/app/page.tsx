@@ -1,8 +1,8 @@
-import { VaultHome } from "@/components/site/VaultHome";
+import { CinderellaVaultShell } from "@/components/site/CinderellaVaultShell";
 import { VAULT_COLLECTIONS } from "@/lib/vault";
 
 export const revalidate = 60;
 
 export default async function Home() {
-  return <VaultHome collections={VAULT_COLLECTIONS} />;
+  return <CinderellaVaultShell collections={VAULT_COLLECTIONS} />;
 }
