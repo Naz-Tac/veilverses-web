@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import type { CollectionSection, CollectionKey } from "@/types/vault";
@@ -262,6 +262,7 @@ function SectionCard({ section, onClick }: { section: CollectionSection; onClick
 // ---------------------------------------------------------------------------
 export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isDoorOpen, setIsDoorOpen] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
   const [cursorSparks, setCursorSparks] = useState<CursorSpark[]>([]);
@@ -283,6 +284,13 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
     },
     [],
   );
+
+  useEffect(() => {
+    if (searchParams.get("open") === "true") {
+      setIsDoorOpen(true);
+      setIsOpening(false);
+    }
+  }, [searchParams]);
 
   const handleEnter = () => {
     if (isOpening || isDoorOpen) return;
