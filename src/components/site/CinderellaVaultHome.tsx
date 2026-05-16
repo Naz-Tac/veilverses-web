@@ -435,7 +435,6 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
                   />
                 )}
               </AnimatePresence>
-            </motion.div>
 
             {/* enter button */}
             <motion.div
