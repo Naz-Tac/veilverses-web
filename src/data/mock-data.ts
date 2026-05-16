@@ -1,0 +1,105 @@
+import { DashboardData, InventoryItem, Order } from "@/types/domain";
+
+export const MOCK_INVENTORY: InventoryItem[] = [
+  {
+    id: "inv-001",
+    name: "Celeste Satin A-Line",
+    category: "Bridal",
+    sku: "BR-001",
+    price: 2890,
+    stock: 5,
+    status: "in_stock",
+    featured: true,
+  },
+  {
+    id: "inv-002",
+    name: "Isabella Crystal Ballgown",
+    category: "Quinceanera",
+    sku: "QU-021",
+    price: 2390,
+    stock: 3,
+    status: "low_stock",
+    featured: true,
+  },
+  {
+    id: "inv-003",
+    name: "Noir Velvet Column",
+    category: "Evening",
+    sku: "EV-113",
+    price: 1190,
+    stock: 7,
+    status: "in_stock",
+    featured: true,
+  },
+  {
+    id: "inv-004",
+    name: "Luna Sequin Corset",
+    category: "Prom & Formal",
+    sku: "PF-042",
+    price: 990,
+    stock: 0,
+    status: "out_of_stock",
+    featured: true,
+  },
+  {
+    id: "inv-005",
+    name: "Aurora Lace Cathedral",
+    category: "Bridal",
+    sku: "BR-008",
+    price: 3290,
+    stock: 2,
+    status: "low_stock",
+    featured: false,
+  },
+  {
+    id: "inv-006",
+    name: "Rosa Organza Court",
+    category: "Quinceanera",
+    sku: "QU-017",
+    price: 2590,
+    stock: 4,
+    status: "in_stock",
+    featured: false,
+  },
+];
+
+export const MOCK_ORDERS: Order[] = [
+  {
+    id: "ord-5001",
+    customerName: "Ariana Mendoza",
+    customerEmail: "ariana@example.com",
+    status: "processing",
+    total: 2890,
+    createdAt: "2026-05-12T19:20:00.000Z",
+    items: [{ sku: "BR-001", quantity: 1, unitPrice: 2890 }],
+  },
+  {
+    id: "ord-5002",
+    customerName: "Elena Ruiz",
+    customerEmail: "elena@example.com",
+    status: "pending",
+    total: 2390,
+    createdAt: "2026-05-14T11:10:00.000Z",
+    items: [{ sku: "QU-021", quantity: 1, unitPrice: 2390 }],
+  },
+  {
+    id: "ord-5003",
+    customerName: "Nadia Chen",
+    customerEmail: "nadia@example.com",
+    status: "completed",
+    total: 1980,
+    createdAt: "2026-05-15T16:45:00.000Z",
+    items: [{ sku: "PF-042", quantity: 2, unitPrice: 990 }],
+  },
+];
+
+export const MOCK_DASHBOARD_DATA: DashboardData = {
+  inventory: MOCK_INVENTORY,
+  orders: MOCK_ORDERS,
+  salesTotals: {
+    grossRevenue: MOCK_ORDERS.reduce((sum, order) => sum + order.total, 0),
+    monthlyRevenue: MOCK_ORDERS.reduce((sum, order) => sum + order.total, 0),
+    pendingOrders: MOCK_ORDERS.filter((order) => order.status === "pending").length,
+    totalOrders: MOCK_ORDERS.length,
+  },
+};
