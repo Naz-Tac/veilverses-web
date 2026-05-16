@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
@@ -35,6 +35,19 @@ type VaultSceneProps = {
   onDoorOpen: () => void;
   onSectionClick: (section: CollectionSection) => void;
   soundEnabled: boolean;
+  onLoadReady: () => void;
+};
+
+type SceneControllerProps = {
+  isDoorOpen: boolean;
+  leftDoorRef: RefObject<THREE.Group | null>;
+  rightDoorRef: RefObject<THREE.Group | null>;
+  doorGlowRef: RefObject<THREE.Mesh | null>;
+  cameraProgressRef: RefObject<number>;
+  closedTargetRef: RefObject<THREE.Vector3>;
+  insideTargetRef: RefObject<THREE.Vector3>;
+  focusTargetRef: RefObject<THREE.Vector3 | null>;
+  loadReadyRef: RefObject<boolean>;
   onLoadReady: () => void;
 };
 
@@ -75,6 +88,58 @@ function useChime(soundEnabled: boolean) {
     oscillatorOne.stop(now + (type === "door" ? 2.3 : 1.25));
     oscillatorTwo.stop(now + (type === "door" ? 2.3 : 1.25));
   };
+}
+
+function SceneController({
+  isDoorOpen,
+  leftDoorRef,
+  rightDoorRef,
+  doorGlowRef,
+  cameraProgressRef,
+  closedTargetRef,
+  insideTargetRef,
+  focusTargetRef,
+  loadReadyRef,
+  onLoadReady,
+}: SceneControllerProps) {
+  useFrame(({ clock, camera }) => {
+    const t = clock.getElapsedTime();
+    const targetProgress = isDoorOpen ? 1 : 0;
+    cameraProgressRef.current = THREE.MathUtils.lerp(cameraProgressRef.current, targetProgress, isDoorOpen ? 0.021 : 0.018);
+
+    const targetCamera = focusTargetRef.current ?? new THREE.Vector3().lerpVectors(
+      closedTargetRef.current,
+      insideTargetRef.current,
+      cameraProgressRef.current,
+    );
+
+    if (focusTargetRef.current) {
+      camera.position.lerp(focusTargetRef.current, 0.075);
+    } else {
+      camera.position.lerp(targetCamera, 0.032);
+    }
+    camera.lookAt(0, 1.6 + cameraProgressRef.current * 0.12, 0);
+
+    if (leftDoorRef.current && rightDoorRef.current) {
+      const hinge = cameraProgressRef.current;
+      leftDoorRef.current.rotation.y = THREE.MathUtils.lerp(leftDoorRef.current.rotation.y, -Math.PI * 0.88 * hinge, 0.05);
+      rightDoorRef.current.rotation.y = THREE.MathUtils.lerp(rightDoorRef.current.rotation.y, Math.PI * 0.88 * hinge, 0.05);
+      leftDoorRef.current.position.x = THREE.MathUtils.lerp(leftDoorRef.current.position.x, -1.92 - hinge * 0.16, 0.04);
+      rightDoorRef.current.position.x = THREE.MathUtils.lerp(rightDoorRef.current.position.x, 1.92 + hinge * 0.16, 0.04);
+    }
+
+    if (doorGlowRef.current) {
+      const material = doorGlowRef.current.material as THREE.MeshBasicMaterial;
+      material.opacity = 0.18 + cameraProgressRef.current * 0.48 + Math.sin(t * 1.8) * 0.03;
+    }
+
+    if (!loadReadyRef.current && t > 0.25) {
+      loadReadyRef.current = true;
+      onLoadReady();
+    }
+  });
+
+  return null;
 }
 
 function CursorTrail({ sparks }: { sparks: CursorSpark[] }) {
@@ -384,43 +449,6 @@ function VaultScene({
   const loadReadyRef = useRef(false);
   const playChime = useChime(soundEnabled);
 
-  useFrame(({ clock, camera }) => {
-    const t = clock.getElapsedTime();
-    const targetProgress = isDoorOpen ? 1 : 0;
-    cameraProgressRef.current = THREE.MathUtils.lerp(cameraProgressRef.current, targetProgress, isDoorOpen ? 0.021 : 0.018);
-
-    const targetCamera = focusTargetRef.current ?? new THREE.Vector3().lerpVectors(
-      closedTargetRef.current,
-      insideTargetRef.current,
-      cameraProgressRef.current,
-    );
-
-    if (focusTargetRef.current) {
-      camera.position.lerp(focusTargetRef.current, 0.075);
-    } else {
-      camera.position.lerp(targetCamera, 0.032);
-    }
-    camera.lookAt(0, 1.6 + cameraProgressRef.current * 0.12, 0);
-
-    if (leftDoorRef.current && rightDoorRef.current) {
-      const hinge = cameraProgressRef.current;
-      leftDoorRef.current.rotation.y = THREE.MathUtils.lerp(leftDoorRef.current.rotation.y, -Math.PI * 0.88 * hinge, 0.05);
-      rightDoorRef.current.rotation.y = THREE.MathUtils.lerp(rightDoorRef.current.rotation.y, Math.PI * 0.88 * hinge, 0.05);
-      leftDoorRef.current.position.x = THREE.MathUtils.lerp(leftDoorRef.current.position.x, -1.92 - hinge * 0.16, 0.04);
-      rightDoorRef.current.position.x = THREE.MathUtils.lerp(rightDoorRef.current.position.x, 1.92 + hinge * 0.16, 0.04);
-    }
-
-    if (doorGlowRef.current) {
-      const material = doorGlowRef.current.material as THREE.MeshBasicMaterial;
-      material.opacity = 0.18 + cameraProgressRef.current * 0.48 + Math.sin(t * 1.8) * 0.03;
-    }
-
-    if (!loadReadyRef.current && t > 0.25) {
-      loadReadyRef.current = true;
-      onLoadReady();
-    }
-  });
-
   useEffect(() => {
     if (focusKey) {
       const section = collections.find((item) => item.key === focusKey);
@@ -440,6 +468,18 @@ function VaultScene({
 
   return (
     <Canvas shadows dpr={[1, 1.8]} camera={{ position: [0, 1.95, 16.6], fov: 36 }}>
+      <SceneController
+        isDoorOpen={isDoorOpen}
+        leftDoorRef={leftDoorRef}
+        rightDoorRef={rightDoorRef}
+        doorGlowRef={doorGlowRef}
+        cameraProgressRef={cameraProgressRef}
+        closedTargetRef={closedTargetRef}
+        insideTargetRef={insideTargetRef}
+        focusTargetRef={focusTargetRef}
+        loadReadyRef={loadReadyRef}
+        onLoadReady={onLoadReady}
+      />
       <color attach="background" args={["#000000"]} />
       <fog attach="fog" args={["#000000", 11, 28]} />
       <ambientLight intensity={0.08} color="#68501a" />
@@ -515,7 +555,7 @@ function VaultScene({
         <meshStandardMaterial color="#191410" roughness={0.82} metalness={0.1} transparent opacity={0.82} />
       </mesh>
 
-      {cameraProgressRef.current > 0.18 && collections.map((section) => (
+      {isDoorOpen && collections.map((section) => (
         <WardrobeSection
           key={section.key}
           section={section}
@@ -527,11 +567,11 @@ function VaultScene({
             playChime("section");
             router.prefetch(clickedSection.route);
           }}
-          visible={cameraProgressRef.current > 0.35}
+          visible={isDoorOpen}
         />
       ))}
 
-      {cameraProgressRef.current > 0.18 && (
+      {isDoorOpen && (
         <Sparkles count={260} scale={[18, 10, 10]} size={1.8} speed={0.28} color="#f0cc72" />
       )}
 
