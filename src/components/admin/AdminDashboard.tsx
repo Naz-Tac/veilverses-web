@@ -2,6 +2,8 @@ import { DashboardData } from "@/types/domain";
 import { InventoryTable } from "@/components/admin/InventoryTable";
 import { OrderManagementTable } from "@/components/admin/OrderManagementTable";
 import { StatCard } from "@/components/admin/StatCard";
+import { CustomersTable } from "@/components/admin/CustomersTable";
+import { AppointmentsTable } from "@/components/admin/AppointmentsTable";
 
 const CURRENCY = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -49,6 +51,8 @@ export function AdminDashboard({ data }: AdminDashboardProps) {
 
       <InventoryTable items={data.inventory} />
       <OrderManagementTable initialOrders={data.orders} />
+      <CustomersTable customers={data.customers} />
+      <AppointmentsTable appointments={data.appointments} />
     </main>
   );
 }

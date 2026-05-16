@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
@@ -654,6 +655,13 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
       <div className="absolute bottom-5 left-5 z-30 rounded-full border border-white/10 bg-black/30 px-4 py-2 text-[10px] uppercase tracking-[0.34em] text-white/70 backdrop-blur-md">
         Pure black · Gold dust · Marble floor
       </div>
+
+      <Link
+        href="/find-my-dress"
+        className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-full border border-[#c9a84c]/55 bg-black/30 px-5 py-2 text-[10px] uppercase tracking-[0.34em] text-[#f7e8bb] backdrop-blur-md"
+      >
+        Find My Dress AI
+      </Link>
 
       <button
         type="button"

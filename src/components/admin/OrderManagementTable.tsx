@@ -8,10 +8,10 @@ type OrderManagementTableProps = {
 };
 
 const ORDER_STATUSES: OrderStatus[] = [
-  "pending",
-  "processing",
-  "ready",
-  "completed",
+  "draft",
+  "submitted",
+  "partially_received",
+  "received",
   "cancelled",
 ];
 
@@ -21,7 +21,7 @@ export function OrderManagementTable({ initialOrders }: OrderManagementTableProp
   const [message, setMessage] = useState<string>("");
 
   const sortedOrders = useMemo(
-    () => [...orders].sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt)),
+    () => [...orders].sort((a, b) => +new Date(b.orderedAt) - +new Date(a.orderedAt)),
     [orders],
   );
 
@@ -58,10 +58,11 @@ export function OrderManagementTable({ initialOrders }: OrderManagementTableProp
           <thead>
             <tr className="border-b border-[#efe4c9] text-[#7a6635]">
               <th className="py-3 pr-4 font-semibold">Order ID</th>
-              <th className="py-3 pr-4 font-semibold">Customer</th>
-              <th className="py-3 pr-4 font-semibold">Email</th>
+              <th className="py-3 pr-4 font-semibold">Supplier</th>
+              <th className="py-3 pr-4 font-semibold">PO Number</th>
               <th className="py-3 pr-4 font-semibold">Total</th>
-              <th className="py-3 pr-4 font-semibold">Created</th>
+              <th className="py-3 pr-4 font-semibold">Ordered</th>
+              <th className="py-3 pr-4 font-semibold">Expected Delivery</th>
               <th className="py-3 pr-4 font-semibold">Status</th>
             </tr>
           </thead>
@@ -69,10 +70,11 @@ export function OrderManagementTable({ initialOrders }: OrderManagementTableProp
             {sortedOrders.map((order) => (
               <tr key={order.id} className="border-b border-[#f3ecd9] text-[#272727]">
                 <td className="py-3 pr-4 font-medium">{order.id}</td>
-                <td className="py-3 pr-4">{order.customerName}</td>
-                <td className="py-3 pr-4">{order.customerEmail}</td>
+                <td className="py-3 pr-4">{order.supplier}</td>
+                <td className="py-3 pr-4">{order.supplierOrderNumber ?? "-"}</td>
                 <td className="py-3 pr-4">${order.total.toLocaleString("en-US")}</td>
-                <td className="py-3 pr-4">{new Date(order.createdAt).toLocaleDateString("en-US")}</td>
+                <td className="py-3 pr-4">{new Date(order.orderedAt).toLocaleDateString("en-US")}</td>
+                <td className="py-3 pr-4">{order.expectedDeliveryAt ? new Date(order.expectedDeliveryAt).toLocaleDateString("en-US") : "-"}</td>
                 <td className="py-3 pr-4">
                   <select
                     className="rounded-lg border border-[#d5bc80] bg-white px-3 py-2 capitalize"

@@ -16,6 +16,7 @@ export function InventoryTable({ items }: InventoryTableProps) {
               <th className="py-3 pr-4 font-semibold">Category</th>
               <th className="py-3 pr-4 font-semibold">SKU</th>
               <th className="py-3 pr-4 font-semibold">Stock</th>
+              <th className="py-3 pr-4 font-semibold">Location</th>
               <th className="py-3 pr-4 font-semibold">Status</th>
               <th className="py-3 pr-4 font-semibold">Price</th>
             </tr>
@@ -27,6 +28,7 @@ export function InventoryTable({ items }: InventoryTableProps) {
                 <td className="py-3 pr-4">{item.category}</td>
                 <td className="py-3 pr-4">{item.sku}</td>
                 <td className="py-3 pr-4">{item.stock}</td>
+                <td className="py-3 pr-4">{item.location}</td>
                 <td className="py-3 pr-4 capitalize">{item.status.replaceAll("_", " ")}</td>
                 <td className="py-3 pr-4">${item.price.toLocaleString("en-US")}</td>
               </tr>

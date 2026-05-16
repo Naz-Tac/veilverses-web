@@ -3,10 +3,10 @@ import { OrderStatus } from "@/types/domain";
 import { updateOrderStatus } from "@/lib/supabase/queries";
 
 const VALID_STATUSES: OrderStatus[] = [
-  "pending",
-  "processing",
-  "ready",
-  "completed",
+  "draft",
+  "submitted",
+  "partially_received",
+  "received",
   "cancelled",
 ];
 
