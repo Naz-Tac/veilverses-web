@@ -1,159 +1,36 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import * as THREE from "three";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Html, Sparkles } from "@react-three/drei";
 import type { CollectionSection, CollectionKey } from "@/types/vault";
 
 type CinderellaVaultHomeProps = {
   collections: CollectionSection[];
 };
 
-type CursorSpark = {
-  id: number;
-  x: number;
-  y: number;
-};
+type CursorSpark = { id: number; x: number; y: number };
 
-type BurstState = {
-  seed: number;
-  position: [number, number, number];
-  color: string;
-};
-
-type VaultSceneProps = {
-  collections: CollectionSection[];
-  isDoorOpen: boolean;
-  hoveredKey: CollectionKey | null;
-  focusKey: CollectionKey | null;
-  burst: BurstState | null;
-  onHover: (key: CollectionKey | null) => void;
-  onDoorOpen: () => void;
-  onSectionClick: (section: CollectionSection) => void;
-  soundEnabled: boolean;
-  onLoadReady: () => void;
-};
-
-type SceneControllerProps = {
-  isDoorOpen: boolean;
-  leftDoorRef: RefObject<THREE.Group | null>;
-  rightDoorRef: RefObject<THREE.Group | null>;
-  doorGlowRef: RefObject<THREE.Mesh | null>;
-  cameraProgressRef: RefObject<number>;
-  closedTargetRef: RefObject<THREE.Vector3>;
-  insideTargetRef: RefObject<THREE.Vector3>;
-  focusTargetRef: RefObject<THREE.Vector3 | null>;
-  loadReadyRef: RefObject<boolean>;
-  onLoadReady: () => void;
-};
-
-function useChime(soundEnabled: boolean) {
-  return (type: "door" | "section") => {
-    if (!soundEnabled || typeof window === "undefined") {
-      return;
-    }
-
-    const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) {
-      return;
-    }
-
-    const context = new AudioContextClass();
-    const gain = context.createGain();
-    gain.gain.value = 0.0001;
-    gain.connect(context.destination);
-
-    const baseFrequency = type === "door" ? 720 : 980;
-    const oscillatorOne = context.createOscillator();
-    const oscillatorTwo = context.createOscillator();
-    oscillatorOne.type = "sine";
-    oscillatorTwo.type = "triangle";
-    oscillatorOne.frequency.value = baseFrequency;
-    oscillatorTwo.frequency.value = baseFrequency * 1.5;
-    oscillatorOne.connect(gain);
-    oscillatorTwo.connect(gain);
-    oscillatorOne.start();
-    oscillatorTwo.start();
-
-    const now = context.currentTime;
-    gain.gain.exponentialRampToValueAtTime(0.15, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + (type === "door" ? 2.2 : 1.2));
-    oscillatorOne.frequency.exponentialRampToValueAtTime(baseFrequency * 0.84, now + 0.45);
-    oscillatorTwo.frequency.exponentialRampToValueAtTime(baseFrequency * 1.18, now + 0.55);
-
-    oscillatorOne.stop(now + (type === "door" ? 2.3 : 1.25));
-    oscillatorTwo.stop(now + (type === "door" ? 2.3 : 1.25));
-  };
-}
-
-function SceneController({
-  isDoorOpen,
-  leftDoorRef,
-  rightDoorRef,
-  doorGlowRef,
-  cameraProgressRef,
-  closedTargetRef,
-  insideTargetRef,
-  focusTargetRef,
-  loadReadyRef,
-  onLoadReady,
-}: SceneControllerProps) {
-  useFrame(({ clock, camera }) => {
-    const t = clock.getElapsedTime();
-    const targetProgress = isDoorOpen ? 1 : 0;
-    cameraProgressRef.current = THREE.MathUtils.lerp(cameraProgressRef.current, targetProgress, isDoorOpen ? 0.021 : 0.018);
-
-    const targetCamera = focusTargetRef.current ?? new THREE.Vector3().lerpVectors(
-      closedTargetRef.current,
-      insideTargetRef.current,
-      cameraProgressRef.current,
-    );
-
-    if (focusTargetRef.current) {
-      camera.position.lerp(focusTargetRef.current, 0.075);
-    } else {
-      camera.position.lerp(targetCamera, 0.032);
-    }
-    camera.lookAt(0, 1.6 + cameraProgressRef.current * 0.12, 0);
-
-    if (leftDoorRef.current && rightDoorRef.current) {
-      const hinge = cameraProgressRef.current;
-      leftDoorRef.current.rotation.y = THREE.MathUtils.lerp(leftDoorRef.current.rotation.y, -Math.PI * 0.72 * hinge, 0.05);
-      rightDoorRef.current.rotation.y = THREE.MathUtils.lerp(rightDoorRef.current.rotation.y, Math.PI * 0.72 * hinge, 0.05);
-      leftDoorRef.current.position.x = THREE.MathUtils.lerp(leftDoorRef.current.position.x, -1.34 - hinge * 0.1, 0.04);
-      rightDoorRef.current.position.x = THREE.MathUtils.lerp(rightDoorRef.current.position.x, 1.34 + hinge * 0.1, 0.04);
-    }
-
-    if (doorGlowRef.current) {
-      const material = doorGlowRef.current.material as THREE.MeshBasicMaterial;
-      material.opacity = 0.18 + cameraProgressRef.current * 0.48 + Math.sin(t * 1.8) * 0.03;
-    }
-
-    if (!loadReadyRef.current && t > 0.25) {
-      loadReadyRef.current = true;
-      onLoadReady();
-    }
-  });
-
-  return null;
-}
-
+// ---------------------------------------------------------------------------
+// Cursor trail
+// ---------------------------------------------------------------------------
 function CursorTrail({ sparks }: { sparks: CursorSpark[] }) {
   return (
     <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
       <AnimatePresence>
-        {sparks.map((spark) => (
+        {sparks.map((s) => (
           <motion.span
-            key={spark.id}
-            initial={{ opacity: 0.55, scale: 0.25, x: spark.x, y: spark.y }}
-            animate={{ opacity: 0, scale: 1.2, x: spark.x + 5, y: spark.y - 5 }}
+            key={s.id}
+            initial={{ opacity: 0.7, scale: 0.3, x: s.x, y: s.y }}
+            animate={{ opacity: 0, scale: 1.6, x: s.x + 6, y: s.y - 10 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.05, ease: "easeOut" }}
-            className="absolute left-0 top-0 block h-1.5 w-1.5 rounded-full bg-[radial-gradient(circle,rgba(250,236,198,0.9)_0%,rgba(176,140,64,0.45)_35%,rgba(176,140,64,0)_74%)] blur-[0.5px]"
+            transition={{ duration: 1.1, ease: "easeOut" }}
+            className="absolute left-0 top-0 block h-2 w-2 rounded-full"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(255,232,160,0.9) 0%, rgba(201,168,76,0.4) 40%, transparent 72%)",
+            }}
           />
         ))}
       </AnimatePresence>
@@ -161,536 +38,538 @@ function CursorTrail({ sparks }: { sparks: CursorSpark[] }) {
   );
 }
 
-function OpeningLogo({ isOpen }: { isOpen: boolean }) {
+// ---------------------------------------------------------------------------
+// Floating gold dust particles (CSS only)
+// ---------------------------------------------------------------------------
+const PARTICLE_DATA = Array.from({ length: 28 }, (_, i) => ({
+  id: i,
+  left: `${5 + ((i * 137) % 90)}%`,
+  delay: (i * 0.38) % 6,
+  duration: 5 + (i % 5),
+  size: i % 3 === 0 ? 3 : i % 2 === 0 ? 2 : 1.5,
+}));
+
+function GoldDust() {
   return (
-    <AnimatePresence>
-      {!isOpen && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 1.05 }}
-          transition={{ duration: 1.1, ease: "easeOut" }}
-          className="pointer-events-none absolute inset-x-0 top-1/2 z-20 flex -translate-y-1/2 justify-center px-4"
-        >
-          <div className="text-center">
-            <motion.div
-              animate={{ filter: ["drop-shadow(0 0 8px rgba(178,140,62,.22))", "drop-shadow(0 0 14px rgba(230,200,136,.35))", "drop-shadow(0 0 8px rgba(178,140,62,.22))"] }}
-              transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut" }}
-              className="mx-auto flex h-28 w-28 items-center justify-center rounded-full border border-[#c5a76a]/20 bg-black/18"
-            >
-              <div className="flex flex-col items-center">
-                <div className="text-[44px] leading-none font-medium italic tracking-[0.03em] text-[#f3ddb1] [font-family:'Snell_Roundhand','Apple_Chancery','URW_Chancery_L',cursive]">V&amp;V</div>
-                <div className="mt-1 h-px w-16 bg-gradient-to-r from-transparent via-[#c9a84c]/70 to-transparent" />
-              </div>
-            </motion.div>
-            <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.45 }}
-              className="mt-5 text-[10px] uppercase tracking-[0.4em] text-[#d8bc82]/88"
-            >
-              Your story begins here...
-            </motion.p>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
-function DoorCrescent({ side }: { side: "left" | "right" }) {
-  const ref = useRef<THREE.Group>(null);
-
-  useFrame(({ clock }) => {
-    if (ref.current) {
-      const t = clock.getElapsedTime();
-      ref.current.position.y = Math.sin(t * 0.8 + (side === "left" ? 0 : 1.7)) * 0.015;
-    }
-  });
-
-  return (
-    <group ref={ref}>
-      <mesh position={[0, 0, 0.03]}>
-        <boxGeometry args={[2.78, 6.3, 0.16]} />
-        <meshStandardMaterial color="#120f0d" roughness={0.92} metalness={0.05} emissive="#7f6122" emissiveIntensity={0.08} />
-      </mesh>
-      <mesh position={[0, 0, 0.1]}>
-        <boxGeometry args={[2.6, 6.08, 0.05]} />
-        <meshStandardMaterial color="#1d1713" roughness={0.84} metalness={0.11} />
-      </mesh>
-      <mesh position={[0, 0, 0.13]}>
-        <boxGeometry args={[2.36, 5.82, 0.03]} />
-        <meshBasicMaterial color="#c8a35b" transparent opacity={0.045} />
-      </mesh>
-      <mesh position={[0, 2.58, 0.15]}>
-        <planeGeometry args={[1.86, 0.18]} />
-        <meshBasicMaterial color="#d7bc71" transparent opacity={0.14} />
-      </mesh>
-      <mesh position={[0, -2.58, 0.15]}>
-        <planeGeometry args={[1.72, 0.14]} />
-        <meshBasicMaterial color="#d7bc71" transparent opacity={0.11} />
-      </mesh>
-      <mesh position={[-0.82, 0, 0.16]}>
-        <boxGeometry args={[0.04, 5.28, 0.06]} />
-        <meshStandardMaterial color="#e2c278" roughness={0.34} metalness={0.9} />
-      </mesh>
-      <mesh position={[0.86, 0.06, 0.2]}>
-        <sphereGeometry args={[0.08, 20, 20]} />
-        <meshStandardMaterial color="#f0dcb0" roughness={0.22} metalness={0.92} emissive="#c9a84c" emissiveIntensity={0.1} />
-      </mesh>
-      <mesh position={[0, 0, 0.17]}>
-        <planeGeometry args={[2.22, 5.6]} />
-        <meshBasicMaterial color="#f7e1aa" transparent opacity={0.026} />
-      </mesh>
-    </group>
-  );
-}
-
-function DoorOpeningBursts() {
-  const points = useMemo(() => {
-    const array = new Float32Array(160 * 3);
-    for (let index = 0; index < 160; index += 1) {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 1.9 + Math.random() * 0.5;
-      array[index * 3] = Math.cos(angle) * radius;
-      array[index * 3 + 1] = (Math.random() - 0.5) * 5.6;
-      array[index * 3 + 2] = Math.sin(angle) * 0.25;
-    }
-    return array;
-  }, []);
-
-  return (
-    <points>
-      <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[points, 3]} />
-      </bufferGeometry>
-      <pointsMaterial color="#d8ba79" size={0.032} transparent opacity={0.5} />
-    </points>
-  );
-}
-
-function DressRow({
-  section,
-  hovered,
-}: {
-  section: CollectionSection;
-  hovered: boolean;
-}) {
-  const sway = hovered ? 0.08 : 0.03;
-  const items = section.key === "quinceanera" ? 4 : section.key === "accessories" ? 3 : 3;
-  const height = section.key === "prom-formal" ? 1.45 : section.key === "quinceanera" ? 1.95 : 1.65;
-  const width = section.key === "quinceanera" ? 0.72 : 0.58;
-  const baseColor = section.key === "quinceanera" ? "#e6a5b6" : section.key === "prom-formal" ? "#f5d7a2" : "#fbf8ef";
-
-  return (
-    <group position={[0, -0.5, 0.04]}>
-      {Array.from({ length: items }, (_, index) => {
-        const offset = (index - (items - 1) / 2) * 0.75;
-        const phase = index * 0.72 + (section.key === "quinceanera" ? 0.35 : 0);
-        return (
-          <group key={index} position={[offset, 0, 0]} rotation={[0, 0, Math.sin(phase) * sway]}>
-            <mesh position={[0, 0.88, 0]}>
-              <torusGeometry args={[0.13, 0.025, 16, 24]} />
-              <meshStandardMaterial color="#d9bb70" emissive="#9c7b2d" emissiveIntensity={hovered ? 0.4 : 0.14} metalness={0.95} roughness={0.1} />
-            </mesh>
-            <mesh position={[0, 0.55, 0]}>
-              <cylinderGeometry args={[0.03, 0.03, 0.78, 14]} />
-              <meshStandardMaterial color="#efefe6" roughness={0.4} metalness={0.04} />
-            </mesh>
-            <mesh position={[0, -0.08, 0]}>
-              <coneGeometry args={[width, height, section.key === "quinceanera" ? 8 : 7]} />
-              <meshStandardMaterial color={baseColor} roughness={0.58} metalness={0.12} emissive={section.accent} emissiveIntensity={hovered ? 0.3 : 0.06} />
-            </mesh>
-            {section.key === "quinceanera" && (
-              <mesh position={[0, -0.38, 0.05]}>
-                <sphereGeometry args={[0.32, 18, 18]} />
-                <meshStandardMaterial color="#f0bfd0" transparent opacity={0.6} emissive="#ffcee2" emissiveIntensity={0.12} />
-              </mesh>
-            )}
-            {section.key === "accessories" && (
-              <mesh position={[0.24, -0.18, 0.05]}>
-                <boxGeometry args={[0.28, 0.18, 0.12]} />
-                <meshStandardMaterial color="#ffffff" roughness={0.28} metalness={0.1} transparent opacity={0.7} />
-              </mesh>
-            )}
-            {section.key === "prom-formal" && (
-              <mesh position={[0, -0.4, 0.05]}>
-                <boxGeometry args={[0.32, 0.18, 0.14]} />
-                <meshStandardMaterial color="#fff3d1" roughness={0.25} metalness={0.08} />
-              </mesh>
-            )}
-          </group>
-        );
-      })}
-    </group>
-  );
-}
-
-function WardrobeSection({
-  section,
-  hoveredKey,
-  onHover,
-  onClick,
-  visible,
-}: {
-  section: CollectionSection;
-  hoveredKey: CollectionKey | null;
-  onHover: (value: CollectionKey | null) => void;
-  onClick: (section: CollectionSection) => void;
-  visible: boolean;
-}) {
-  const ref = useRef<THREE.Group>(null);
-  const isHovered = hoveredKey === section.key;
-
-  useFrame(({ clock }) => {
-    if (!ref.current) {
-      return;
-    }
-
-    const t = clock.getElapsedTime();
-    ref.current.position.y = section.position[1] + Math.sin(t * 1.1 + section.position[0]) * (isHovered ? 0.06 : 0.02);
-    ref.current.rotation.z = Math.sin(t * 0.8 + section.position[0]) * (isHovered ? 0.018 : 0.009);
-    ref.current.scale.setScalar(visible ? (isHovered ? 1.06 : 1) : 0.96);
-  });
-
-  const shelfGlow = section.key === "accessories" ? "#ffffff" : section.key === "quinceanera" ? "#f2b8ca" : section.key === "bridal" ? "#f5f0e2" : section.key === "prom-formal" ? "#f1cc8a" : "#f3f0e6";
-  const panelGlow = section.key === "accessories" ? "#eceef9" : section.key === "quinceanera" ? "#e46a93" : section.key === "bridal" ? "#ffffff" : section.key === "prom-formal" ? "#f0be5d" : "#d8dbe9";
-  const title = section.label;
-
-  return (
-    <group
-      ref={ref}
-      position={section.position}
-      onPointerOver={() => onHover(section.key)}
-      onPointerOut={() => onHover(null)}
-      onClick={() => onClick(section)}
-    >
-      <mesh castShadow receiveShadow>
-        <boxGeometry args={[section.size[0], section.size[1], section.size[2]]} />
-        <meshStandardMaterial color={isHovered ? "#342818" : "#18120f"} roughness={0.86} metalness={0.08} emissive={section.accent} emissiveIntensity={isHovered ? 0.35 : 0.08} />
-      </mesh>
-      <mesh position={[0, 0, section.size[2] / 2 + 0.01]}>
-        <planeGeometry args={[section.size[0] * 0.96, section.size[1] * 0.96]} />
-        <meshBasicMaterial color={panelGlow} transparent opacity={isHovered ? 0.18 : 0.08} />
-      </mesh>
-      <mesh position={[0, section.size[1] / 2 - 0.16, 0.04]}>
-        <planeGeometry args={[section.size[0] * 0.72, 0.22]} />
-        <meshBasicMaterial color={shelfGlow} transparent opacity={isHovered ? 0.32 : 0.18} />
-      </mesh>
-      <mesh position={[0, -section.size[1] / 2 + 0.18, 0.04]}>
-        <planeGeometry args={[section.size[0] * 0.72, 0.14]} />
-        <meshBasicMaterial color={shelfGlow} transparent opacity={isHovered ? 0.25 : 0.14} />
-      </mesh>
-
-      {visible && <DressRow section={section} hovered={isHovered} />}
-
-      <Html center position={[0, section.size[1] / 2 + 0.42, 0.08]} transform occlude>
-        <motion.div
-          animate={{
-            scale: isHovered ? 1.04 : 1,
-            boxShadow: isHovered ? "0 0 36px rgba(201,168,76,.3)" : "0 0 0 rgba(0,0,0,0)",
-          }}
-          transition={{ duration: 0.25 }}
-          className={`rounded-full border px-4 py-2 text-center uppercase tracking-[0.42em] backdrop-blur-sm transition ${isHovered ? "border-[#f1d993] bg-black/60 text-[#fff2c0]" : "border-white/15 bg-black/28 text-white/78"}`}
-        >
-          <div className="text-[10px] font-semibold">{title}</div>
-          <div className="mt-1 text-[9px] tracking-[0.28em] text-[#f8e3b5]">24 styles →</div>
-        </motion.div>
-      </Html>
-
-      <Html center position={[0, 0, section.size[2] / 2 + 0.18]} transform occlude>
-        <motion.div
-          animate={{ opacity: isHovered ? 1 : 0.88 }}
-          className={`rounded-full px-3 py-1 text-[9px] uppercase tracking-[0.32em] ${isHovered ? "bg-[#c9a84c] text-black" : "bg-black/35 text-[#f1d993]"}`}
-        >
-          {section.description}
-        </motion.div>
-      </Html>
-    </group>
-  );
-}
-
-function VaultScene({
-  collections,
-  isDoorOpen,
-  hoveredKey,
-  focusKey,
-  burst,
-  onHover,
-  onDoorOpen,
-  onSectionClick,
-  soundEnabled,
-  onLoadReady,
-}: VaultSceneProps) {
-  const router = useRouter();
-  const leftDoorRef = useRef<THREE.Group>(null);
-  const rightDoorRef = useRef<THREE.Group>(null);
-  const doorGlowRef = useRef<THREE.Mesh>(null);
-  const cameraProgressRef = useRef(0);
-  const closedTargetRef = useRef(new THREE.Vector3(0, 1.95, 12.2));
-  const insideTargetRef = useRef(new THREE.Vector3(0, 1.95, 7.6));
-  const focusTargetRef = useRef<THREE.Vector3 | null>(null);
-  const loadReadyRef = useRef(false);
-  const playChime = useChime(soundEnabled);
-
-  useEffect(() => {
-    if (focusKey) {
-      const section = collections.find((item) => item.key === focusKey);
-      focusTargetRef.current = section ? new THREE.Vector3(section.position[0], section.position[1] + 0.1, section.position[2] + 4.0) : null;
-    } else {
-      focusTargetRef.current = null;
-    }
-  }, [collections, focusKey]);
-
-  useEffect(() => {
-    if (isDoorOpen) {
-      playChime("door");
-    }
-  }, [isDoorOpen, playChime]);
-
-  const sectionBurst = burst ? <Sparkles key={burst.seed} count={burst.seed % 2 === 0 ? 160 : 120} scale={[2.4, 2.4, 2.4]} size={2} speed={0.4} color={burst.color} position={burst.position} /> : null;
-
-  return (
-    <Canvas shadows dpr={[1, 1.8]} camera={{ position: [0, 1.95, 17.4], fov: 33 }}>
-      <SceneController
-        isDoorOpen={isDoorOpen}
-        leftDoorRef={leftDoorRef}
-        rightDoorRef={rightDoorRef}
-        doorGlowRef={doorGlowRef}
-        cameraProgressRef={cameraProgressRef}
-        closedTargetRef={closedTargetRef}
-        insideTargetRef={insideTargetRef}
-        focusTargetRef={focusTargetRef}
-        loadReadyRef={loadReadyRef}
-        onLoadReady={onLoadReady}
-      />
-      <color attach="background" args={["#070605"]} />
-      <fog attach="fog" args={["#070605", 12.5, 31]} />
-      <ambientLight intensity={0.06} color="#584728" />
-      <pointLight position={[0, 5.1, 2.4]} intensity={0.45} color="#d6b77c" />
-      <spotLight position={[0, 7, 4.8]} angle={0.21} intensity={1.4} penumbra={0.62} color="#e7ca94" castShadow />
-      <pointLight position={[-5, 1, 1]} intensity={0.22} color="#b59452" />
-      <pointLight position={[5, 1, 1]} intensity={0.22} color="#b59452" />
-
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.72, 0]} receiveShadow>
-        <planeGeometry args={[64, 64]} />
-        <meshStandardMaterial color="#100e0d" roughness={0.52} metalness={0.34} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.71, 0.01]} receiveShadow>
-        <planeGeometry args={[64, 64]} />
-        <meshStandardMaterial color="#5f5245" roughness={0.16} metalness={0.42} transparent opacity={0.08} />
-      </mesh>
-
-      <group position={[0, 0, 0]} scale={[0.7, 0.7, 0.7]}>
-        <mesh position={[0, 3.95, 0.3]}>
-          <cylinderGeometry args={[0.015, 0.015, 0.34, 14]} />
-          <meshStandardMaterial color="#e6cb93" emissive="#b8924c" emissiveIntensity={0.2} metalness={0.3} roughness={0.32} />
-        </mesh>
-        <mesh position={[0, 4.22, 0.31]}>
-          <sphereGeometry args={[0.13, 20, 20]} />
-          <meshStandardMaterial color="#ead8b1" emissive="#ba9552" emissiveIntensity={0.32} metalness={0.08} roughness={0.26} />
-        </mesh>
-        <mesh position={[0, 4.22, 0.31]}>
-          <sphereGeometry args={[0.34, 24, 24]} />
-          <meshBasicMaterial color="#d9b873" transparent opacity={0.05} />
-        </mesh>
-        <mesh position={[0, 4.5, 0.3]}>
-          <torusGeometry args={[0.52, 0.026, 16, 54]} />
-          <meshStandardMaterial color="#c5a462" emissive="#967436" emissiveIntensity={0.18} metalness={0.88} roughness={0.24} />
-        </mesh>
-        <group ref={leftDoorRef} position={[-1.34, 0, 0]}>
-          <DoorCrescent side="left" />
-        </group>
-        <group ref={rightDoorRef} position={[1.34, 0, 0]}>
-          <DoorCrescent side="right" />
-        </group>
-      </group>
-
-      <mesh ref={doorGlowRef} position={[0, 0, 0.15]}>
-        <boxGeometry args={[3.02, 6.5, 0.04]} />
-        <meshBasicMaterial color="#e6c17a" transparent opacity={0.08} />
-      </mesh>
-
-      <Html center position={[0, -0.18, 0.27]} transform occlude>
-        <motion.button
-          type="button"
-          onClick={onDoorOpen}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: isDoorOpen ? 0 : 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.55 }}
-          className="border border-[#c7a668]/75 bg-black/12 px-4 py-1.5 text-[9px] font-medium uppercase tracking-[0.28em] text-[#ddc08a] backdrop-blur-[1.5px] transition hover:bg-black/22"
-        >
-          Enter The Vault
-        </motion.button>
-      </Html>
-
-      {sectionBurst}
-
-      <mesh position={[0, 0, -5.35]}>
-        <boxGeometry args={[10.4, 8.4, 0.06]} />
-        <meshStandardMaterial color="#0d0c0b" roughness={0.94} metalness={0.04} transparent opacity={0.22} />
-      </mesh>
-
-      <mesh position={[0, 0, -5.28]}>
-        <boxGeometry args={[10.1, 8.1, 0.05]} />
-        <meshStandardMaterial color="#151210" roughness={0.85} metalness={0.08} transparent opacity={0.84} />
-      </mesh>
-
-      {isDoorOpen && collections.map((section) => (
-        <WardrobeSection
-          key={section.key}
-          section={section}
-          hoveredKey={hoveredKey}
-          onHover={onHover}
-          onClick={(clickedSection) => {
-            focusTargetRef.current = new THREE.Vector3(clickedSection.position[0], clickedSection.position[1] + 0.35, clickedSection.position[2] + 4.3);
-            onSectionClick(clickedSection);
-            playChime("section");
-            router.prefetch(clickedSection.route);
-          }}
-          visible={isDoorOpen}
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      {PARTICLE_DATA.map((p) => (
+        <motion.span
+          key={p.id}
+          className="absolute rounded-full bg-[#C9A84C]"
+          style={{ left: p.left, width: p.size, height: p.size, bottom: -8, opacity: 0 }}
+          animate={{ y: [0, -1100], opacity: [0, 0.5, 0.5, 0] }}
+          transition={{ duration: p.duration, delay: p.delay, repeat: Infinity, ease: "linear" }}
         />
       ))}
-
-      {isDoorOpen && (
-        <Sparkles count={120} scale={[16, 9, 9]} size={1.1} speed={0.16} color="#ccae71" />
-      )}
-
-      {burst && <DoorOpeningBursts key={burst.seed} />}
-    </Canvas>
+    </div>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Chandelier
+// ---------------------------------------------------------------------------
+function Chandelier() {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex justify-center">
+      <div className="flex flex-col items-center">
+        <div className="h-14 w-px bg-gradient-to-b from-transparent via-[#C9A84C]/60 to-[#C9A84C]" />
+        <motion.div
+          animate={{
+            filter: [
+              "drop-shadow(0 0 8px #C9A84C)",
+              "drop-shadow(0 0 22px #ffe4a0)",
+              "drop-shadow(0 0 8px #C9A84C)",
+            ],
+          }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          className="relative flex items-center justify-center"
+        >
+          <div className="h-24 w-24 rounded-full border-2 border-[#C9A84C] shadow-[0_0_24px_rgba(201,168,76,0.55),inset_0_0_14px_rgba(201,168,76,0.15)] sm:h-28 sm:w-28" />
+          <div className="absolute h-6 w-6 rounded-full bg-[radial-gradient(circle,#fff9e6_0%,#f0cc60_40%,#a07828_100%)] shadow-[0_0_16px_rgba(255,220,100,0.9)] sm:h-8 sm:w-8" />
+          {[0, 60, 120, 180, 240, 300].map((angle) => (
+            <div
+              key={angle}
+              className="absolute h-px w-12 origin-left bg-gradient-to-r from-[#C9A84C] to-[#C9A84C]/40"
+              style={{ transform: `rotate(${angle}deg) translateX(12px)` }}
+            />
+          ))}
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => {
+            const rad = (angle * Math.PI) / 180;
+            const r = 52;
+            return (
+              <motion.div
+                key={angle}
+                className="absolute h-3 w-1 rounded-full bg-gradient-to-b from-[#ffe8a0] to-[#C9A84C]/50 sm:h-4 sm:w-1.5"
+                style={{
+                  left: `calc(50% + ${Math.cos(rad) * r}px - 2px)`,
+                  top: `calc(50% + ${Math.sin(rad) * r}px)`,
+                }}
+                animate={{ rotateZ: ["-3deg", "3deg", "-3deg"] }}
+                transition={{ duration: 2 + (angle % 3), repeat: Infinity, ease: "easeInOut" }}
+              />
+            );
+          })}
+        </motion.div>
+        <div className="h-24 w-48 bg-[radial-gradient(ellipse_at_top,rgba(255,210,100,0.22)_0%,transparent_68%)]" />
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Door panel with CSS wood grain + gold trim
+// ---------------------------------------------------------------------------
+function DoorPanel({ side, isOpen }: { side: "left" | "right"; isOpen: boolean }) {
+  const isLeft = side === "left";
+  return (
+    <motion.div
+      initial={false}
+      animate={{ rotateY: isOpen ? (isLeft ? -88 : 88) : 0 }}
+      transition={{ duration: 1.5, ease: [0.22, 0.9, 0.36, 1] }}
+      style={{ transformOrigin: isLeft ? "left center" : "right center", transformStyle: "preserve-3d" }}
+      className="relative h-full w-1/2 overflow-hidden"
+    >
+      {/* walnut wood grain */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `
+            repeating-linear-gradient(179deg,rgba(42,22,8,0) 0px,rgba(42,22,8,0) 3px,rgba(72,38,12,0.22) 4px,rgba(42,22,8,0) 5px),
+            repeating-linear-gradient(181deg,rgba(90,48,16,0) 0px,rgba(90,48,16,0) 6px,rgba(110,62,20,0.16) 7px,rgba(90,48,16,0) 8px),
+            linear-gradient(180deg,#3b1e0c 0%,#4e2810 18%,#5d3214 38%,#4a2510 55%,#3d1f0d 72%,#2e160a 88%,#231208 100%)
+          `,
+        }}
+      />
+      {/* outer gold border */}
+      <div className="pointer-events-none absolute inset-0 border-4 border-[#C9A84C] shadow-[inset_0_0_0_2px_rgba(255,235,160,0.3)]" />
+      {/* top molding panel */}
+      <div className="absolute left-2.5 right-2.5 top-2.5 h-[26%] border-2 border-[#C9A84C]/75 bg-[rgba(201,168,76,0.06)]">
+        <div className="absolute inset-1 border border-[#C9A84C]/40" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <svg viewBox="0 0 48 48" className="h-8 w-8 opacity-65">
+            <circle cx="24" cy="24" r="3.5" fill="#C9A84C" />
+            <ellipse cx="24" cy="12" rx="3" ry="7" fill="#C9A84C" opacity="0.7" />
+            <ellipse cx="24" cy="36" rx="3" ry="7" fill="#C9A84C" opacity="0.7" />
+            <ellipse cx="12" cy="24" rx="7" ry="3" fill="#C9A84C" opacity="0.7" />
+            <ellipse cx="36" cy="24" rx="7" ry="3" fill="#C9A84C" opacity="0.7" />
+          </svg>
+        </div>
+      </div>
+      {/* center molding panel */}
+      <div className="absolute bottom-[15%] left-2.5 right-2.5 top-[30%] border-2 border-[#C9A84C]/75 bg-[rgba(201,168,76,0.04)]">
+        <div className="absolute inset-1 border border-[#C9A84C]/35" />
+        <div className="absolute inset-y-2 left-1/2 w-px -translate-x-1/2 bg-[#C9A84C]/25" />
+        <div className="absolute inset-x-2 top-1/2 h-px -translate-y-1/2 bg-[#C9A84C]/25" />
+      </div>
+      {/* bottom molding panel */}
+      <div className="absolute bottom-2.5 left-2.5 right-2.5 h-[13%] border-2 border-[#C9A84C]/75 bg-[rgba(201,168,76,0.06)]">
+        <div className="absolute inset-1 border border-[#C9A84C]/40" />
+      </div>
+      {/* door handle + keyhole on inner edge */}
+      <div
+        className="absolute top-1/2 -translate-y-1/2 flex flex-col items-center gap-1"
+        style={{ [isLeft ? "right" : "left"]: "10px" }}
+      >
+        <div className="h-0.5 w-6 rounded-full bg-gradient-to-r from-[#a07828] via-[#f5e08c] to-[#a07828] shadow-[0_1px_6px_rgba(201,168,76,0.7)]" />
+        <div className="h-9 w-2.5 rounded-full bg-gradient-to-b from-[#f5e08c] via-[#C9A84C] to-[#a07828] shadow-[0_0_8px_rgba(201,168,76,0.8),inset_0_1px_2px_rgba(255,255,200,0.5)]" />
+        <div className="h-0.5 w-6 rounded-full bg-gradient-to-r from-[#a07828] via-[#f5e08c] to-[#a07828] shadow-[0_1px_6px_rgba(201,168,76,0.7)]" />
+        <div className="mt-2 flex flex-col items-center">
+          <div className="h-2.5 w-2.5 rounded-full border-2 border-[#C9A84C] bg-black/60 shadow-[0_0_5px_rgba(201,168,76,0.6)]" />
+          <div className="h-2 w-1.5 bg-[#C9A84C]" style={{ clipPath: "polygon(25% 0, 75% 0, 100% 100%, 0% 100%)" }} />
+        </div>
+      </div>
+      {/* center seam gold line */}
+      <div
+        className="absolute inset-y-0 w-0.5 bg-gradient-to-b from-[#C9A84C]/10 via-[#C9A84C] to-[#C9A84C]/10"
+        style={{ [isLeft ? "right" : "left"]: 0 }}
+      />
+      {/* inner glow seam pulse */}
+      <motion.div
+        animate={{ opacity: isOpen ? 0 : [0.25, 0.6, 0.25] }}
+        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+        className="pointer-events-none absolute inset-y-0 w-10 bg-[radial-gradient(ellipse_at_center,rgba(255,220,100,0.2)_0%,transparent_80%)]"
+        style={{ [isLeft ? "right" : "left"]: 0 }}
+      />
+    </motion.div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Section card in vault interior
+// ---------------------------------------------------------------------------
+const SECTION_ICONS: Record<CollectionKey, string> = {
+  accessories: "👑",
+  bridal: "🤍",
+  quinceanera: "🌸",
+  "prom-formal": "✨",
+  "shoes-bags": "👠",
+};
+
+function SectionCard({ section, onClick }: { section: CollectionSection; onClick: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      onHoverStart={() => setHovered(true)}
+      onHoverEnd={() => setHovered(false)}
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.04, y: -3 }}
+      transition={{ duration: 0.35 }}
+      className="relative w-full overflow-hidden rounded-sm border border-[#C9A84C]/55 p-2.5 text-center sm:p-4"
+      style={{
+        background: hovered
+          ? "linear-gradient(135deg,rgba(201,168,76,0.2) 0%,rgba(201,168,76,0.07) 100%)"
+          : "linear-gradient(135deg,rgba(38,24,8,0.9) 0%,rgba(22,13,4,0.95) 100%)",
+        boxShadow: hovered
+          ? "0 0 22px rgba(201,168,76,0.4),inset 0 0 10px rgba(201,168,76,0.1)"
+          : "0 2px 10px rgba(0,0,0,0.45)",
+      }}
+    >
+      {/* gold corner accents */}
+      <div className="pointer-events-none absolute left-0 top-0 h-3 w-3 border-l-2 border-t-2 border-[#C9A84C]" />
+      <div className="pointer-events-none absolute right-0 top-0 h-3 w-3 border-r-2 border-t-2 border-[#C9A84C]" />
+      <div className="pointer-events-none absolute bottom-0 left-0 h-3 w-3 border-b-2 border-l-2 border-[#C9A84C]" />
+      <div className="pointer-events-none absolute bottom-0 right-0 h-3 w-3 border-b-2 border-r-2 border-[#C9A84C]" />
+
+      <div className="text-xl leading-none sm:text-2xl">{SECTION_ICONS[section.key]}</div>
+      <div
+        className="mt-1.5 text-[10px] font-bold uppercase leading-tight tracking-[0.12em] text-[#F5D87A] sm:text-xs"
+        style={{ textShadow: "0 1px 5px rgba(201,168,76,0.7)" }}
+      >
+        {section.label}
+      </div>
+      <div className="mt-1 text-[9px] leading-snug text-[#e8d5a8]/72 sm:text-[10px]">
+        {section.description}
+      </div>
+      {hovered && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="mt-1 text-[9px] font-semibold uppercase tracking-widest text-[#C9A84C]"
+        >
+          Explore →
+        </motion.div>
+      )}
+    </motion.button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Main component
+// ---------------------------------------------------------------------------
 export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
   const router = useRouter();
   const [isDoorOpen, setIsDoorOpen] = useState(false);
-  const [isDoorOpening, setIsDoorOpening] = useState(false);
-  const [hoveredKey, setHoveredKey] = useState<CollectionKey | null>(null);
-  const [focusKey, setFocusKey] = useState<CollectionKey | null>(null);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [isOpening, setIsOpening] = useState(false);
   const [cursorSparks, setCursorSparks] = useState<CursorSpark[]>([]);
-  const [burst, setBurst] = useState<BurstState | null>(null);
   const sparkIdRef = useRef(0);
-  const burstIdRef = useRef(0);
-  const openTimeoutRef = useRef<number | null>(null);
-  const routeTimeoutRef = useRef<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
-  const onDoorOpen = () => {
-    if (isDoorOpening || isDoorOpen) {
-      return;
-    }
-    setIsDoorOpening(true);
-    setBurst({ seed: burstIdRef.current += 1, position: [0, 0, 0.4], color: "#ffd977" });
-    if (soundEnabled) {
-      window.setTimeout(() => {
-        const audio = new AudioContext();
-        const gain = audio.createGain();
-        const oscillator = audio.createOscillator();
-        oscillator.type = "sine";
-        oscillator.frequency.value = 920;
-        oscillator.connect(gain);
-        gain.connect(audio.destination);
-        gain.gain.value = 0.0001;
-        oscillator.start();
-        gain.gain.exponentialRampToValueAtTime(0.12, audio.currentTime + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 1.8);
-        oscillator.stop(audio.currentTime + 1.85);
-      }, 620);
-    }
-    openTimeoutRef.current = window.setTimeout(() => {
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const id = (sparkIdRef.current += 1);
+      setCursorSparks((prev) => [...prev, { id, x: e.clientX, y: e.clientY }].slice(-18));
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    },
+    [],
+  );
+
+  const handleEnter = () => {
+    if (isOpening || isDoorOpen) return;
+    setIsOpening(true);
+    timeoutRef.current = window.setTimeout(() => {
       setIsDoorOpen(true);
-      setIsDoorOpening(false);
-      setBurst(null);
-    }, 3300);
+      setIsOpening(false);
+    }, 1800);
   };
 
-  const onSectionClick = (section: CollectionSection) => {
-    setFocusKey(section.key);
-    setBurst({ seed: burstIdRef.current += 1, position: section.position, color: section.accent });
-    if (routeTimeoutRef.current) {
-      window.clearTimeout(routeTimeoutRef.current);
-    }
-    routeTimeoutRef.current = window.setTimeout(() => {
-      router.push(section.route);
-    }, 900);
-  };
-
-  useEffect(() => {
-    const handlePointerMove = (event: PointerEvent) => {
-      const nextId = sparkIdRef.current += 1;
-      setCursorSparks((current) => {
-        const next = [...current, { id: nextId, x: event.clientX, y: event.clientY }];
-        return next.slice(-14);
-      });
-    };
-
-    window.addEventListener("pointermove", handlePointerMove, { passive: true });
-    return () => window.removeEventListener("pointermove", handlePointerMove);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (openTimeoutRef.current) {
-        window.clearTimeout(openTimeoutRef.current);
-      }
-      if (routeTimeoutRef.current) {
-        window.clearTimeout(routeTimeoutRef.current);
-      }
-    };
-  }, []);
+  // Ordered layout
+  const topSection = collections.find((c) => c.key === "accessories");
+  const midSections = collections.filter((c) =>
+    ["bridal", "quinceanera", "prom-formal"].includes(c.key),
+  );
+  const bottomSection = collections.find((c) => c.key === "shoes-bags");
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-[#070605] text-white">
-      <CursorTrail sparks={cursorSparks} />
-      <VaultScene
-        collections={collections}
-        isDoorOpen={isDoorOpen}
-        hoveredKey={hoveredKey}
-        focusKey={focusKey}
-        burst={burst}
-        onHover={setHoveredKey}
-        onDoorOpen={onDoorOpen}
-        onSectionClick={onSectionClick}
-        soundEnabled={soundEnabled}
-        onLoadReady={() => undefined}
-      />
-      <OpeningLogo isOpen={isDoorOpen} />
+    <div
+      className="relative flex h-screen w-full flex-col overflow-hidden text-white"
+      style={{
+        background:
+          "radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.13) 0%, transparent 52%), linear-gradient(180deg, #1c1624 0%, #14101e 40%, #0f0d17 100%)",
+      }}
+    >
+      {/* ambient glow */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute left-1/4 top-1/3 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(201,168,76,0.08)_0%,transparent_70%)] blur-3xl" />
+        <div className="absolute right-1/4 top-1/3 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(201,168,76,0.06)_0%,transparent_70%)] blur-3xl" />
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[rgba(201,168,76,0.05)] to-transparent" />
+      </div>
 
+      <GoldDust />
+      <CursorTrail sparks={cursorSparks} />
+      <Chandelier />
+
+      {/* ===== CLOSED / DOOR VIEW ===== */}
       <AnimatePresence>
         {!isDoorOpen && (
           <motion.div
+            key="closed"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center px-8 text-center"
+            transition={{ duration: 0.7 }}
+            className="absolute inset-0 z-20 flex flex-col items-center justify-center"
           >
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.42em] text-[#cfb176]">Your story begins here...</p>
-              <p className="mt-3 max-w-xl text-[13px] leading-7 text-[#f3e6ce]/58">A quiet world of couture silhouettes, polished brass, and soft light awaits behind the doors.</p>
+            {/* V&V logo */}
+            <motion.div
+              initial={{ opacity: 0, y: -14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.1, delay: 0.2 }}
+              className="mb-5 flex flex-col items-center"
+            >
+              <motion.div
+                animate={{
+                  textShadow: [
+                    "0 0 18px rgba(201,168,76,0.8)",
+                    "0 0 42px rgba(255,224,120,1)",
+                    "0 0 18px rgba(201,168,76,0.8)",
+                  ],
+                }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+                className="text-5xl font-bold italic text-[#C9A84C] sm:text-6xl"
+                style={{ fontFamily: "var(--font-display), Georgia, serif" }}
+              >
+                V&amp;V
+              </motion.div>
+              <div className="mt-1 h-px w-28 bg-gradient-to-r from-transparent via-[#C9A84C] to-transparent" />
+              <div
+                className="mt-2 text-[11px] uppercase tracking-[0.48em] text-[#ddc882]"
+                style={{ textShadow: "0 1px 10px rgba(0,0,0,0.85)" }}
+              >
+                Veil &amp; Verses
+              </div>
+            </motion.div>
+
+            {/* The door */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.38 }}
+              className="relative mx-auto w-[min(300px,80vw)]"
+              style={{ perspective: "900px" }}
+            >
+              {/* outer gold frame */}
+              <div
+                className="relative overflow-hidden shadow-[0_12px_56px_rgba(0,0,0,0.75),0_0_50px_rgba(201,168,76,0.15)]"
+                style={{
+                  border: "3px solid #C9A84C",
+                  boxShadow:
+                    "0 0 0 1px rgba(255,235,160,0.22), 0 12px 56px rgba(0,0,0,0.75), 0 0 50px rgba(201,168,76,0.18)",
+                }}
+              >
+                {/* arch header bar */}
+                <div
+                  className="flex h-9 items-center justify-center border-b-2 border-[#C9A84C]/65"
+                  style={{
+                    background: "linear-gradient(180deg,#4e2810 0%,#3b1e0c 60%,#2e160a 100%)",
+                  }}
+                >
+                  <span
+                    className="text-[8px] font-bold uppercase tracking-[0.55em] text-[#C9A84C]"
+                    style={{ textShadow: "0 0 8px rgba(201,168,76,0.6)" }}
+                  >
+                    The Vault
+                  </span>
+                </div>
+
+                {/* two door panels */}
+                <div className="relative flex h-[380px] sm:h-[440px]" style={{ transformStyle: "preserve-3d" }}>
+                  {/* golden seam glow */}
+                  <motion.div
+                    animate={{
+                      opacity: isOpening ? [0.5, 1, 1] : [0.3, 0.65, 0.3],
+                      width: isOpening ? ["2px", "8px", "8px"] : "2px",
+                    }}
+                    transition={{
+                      duration: isOpening ? 1.4 : 2.8,
+                      repeat: isOpening ? 0 : Infinity,
+                      ease: "easeInOut",
+                    }}
+                    className="pointer-events-none absolute inset-y-0 left-1/2 z-10 -translate-x-1/2 bg-gradient-to-b from-[#ffe88c]/60 via-[#ffd060] to-[#ffe88c]/60"
+                    style={{ boxShadow: "0 0 14px 5px rgba(255,210,80,0.55)" }}
+                  />
+                  <DoorPanel side="left" isOpen={isDoorOpen || isOpening} />
+                  <DoorPanel side="right" isOpen={isDoorOpen || isOpening} />
+                </div>
+
+                {/* floor sill */}
+                <div
+                  className="h-3.5 border-t-2 border-[#C9A84C]/65"
+                  style={{ background: "linear-gradient(180deg,#4e2810 0%,#2e160a 100%)" }}
+                />
+              </div>
+
+              {/* golden light burst when opening */}
+              <AnimatePresence>
+                {isOpening && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="pointer-events-none absolute inset-[-20px] bg-[radial-gradient(ellipse_at_center,rgba(255,210,80,0.48)_0%,transparent_62%)]"
+                  />
+                )}
+              </AnimatePresence>
+            </motion.div>
+
+            {/* enter button */}
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.8 }}
+              className="mt-6 flex flex-col items-center gap-2.5"
+            >
+              <button
+                type="button"
+                onClick={handleEnter}
+                disabled={isOpening}
+                className="relative overflow-hidden border border-[#C9A84C] px-8 py-3 text-sm font-semibold uppercase tracking-[0.28em] text-[#F5D87A] transition-all disabled:opacity-60"
+                style={{
+                  background: "linear-gradient(135deg,rgba(201,168,76,0.12) 0%,rgba(201,168,76,0.05) 100%)",
+                  boxShadow: "0 0 22px rgba(201,168,76,0.28)",
+                  textShadow: "0 1px 8px rgba(201,168,76,0.5)",
+                }}
+              >
+                {isOpening ? "Opening…" : "Enter The Vault"}
+                <motion.div
+                  className="pointer-events-none absolute inset-0 bg-[#C9A84C]/12"
+                  initial={{ x: "-100%" }}
+                  whileHover={{ x: "100%" }}
+                  transition={{ duration: 0.55 }}
+                />
+              </button>
+              <p
+                className="text-xs uppercase tracking-[0.4em] text-[#d4b878]"
+                style={{ textShadow: "0 1px 10px rgba(0,0,0,0.9)" }}
+              >
+                Your story begins here
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ===== OPEN / INTERIOR VIEW ===== */}
+      <AnimatePresence>
+        {isDoorOpen && (
+          <motion.div
+            key="interior"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.9 }}
+            className="relative z-20 flex h-full flex-col"
+          >
+            {/* header */}
+            <div
+              className="relative px-4 pb-3 pt-20 text-center"
+              style={{
+                background: "radial-gradient(ellipse at 50% 0%,rgba(255,210,80,0.15) 0%,transparent 62%)",
+              }}
+            >
+              <motion.div
+                initial={{ opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.7 }}
+              >
+                <div
+                  className="text-3xl font-bold italic text-[#C9A84C] sm:text-4xl"
+                  style={{
+                    fontFamily: "var(--font-display), Georgia, serif",
+                    textShadow: "0 0 26px rgba(201,168,76,0.85)",
+                  }}
+                >
+                  V&amp;V
+                </div>
+                <div className="mx-auto mt-1 h-px w-20 bg-gradient-to-r from-transparent via-[#C9A84C] to-transparent" />
+                <p
+                  className="mt-1.5 text-xs uppercase tracking-[0.38em] text-[#e8d090]"
+                  style={{ textShadow: "0 1px 8px rgba(0,0,0,0.7)" }}
+                >
+                  Welcome to the vault
+                </p>
+              </motion.div>
+            </div>
+
+            {/* collection grid */}
+            <div className="flex-1 overflow-y-auto px-3 pb-20 sm:px-5">
+              {topSection && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.38, duration: 0.6 }}
+                  className="mb-2.5"
+                >
+                  <SectionCard section={topSection} onClick={() => router.push(topSection.route)} />
+                </motion.div>
+              )}
+
+              <div className="mb-2.5 grid grid-cols-3 gap-2 sm:gap-3">
+                {midSections.map((s, i) => (
+                  <motion.div
+                    key={s.key}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.48 + i * 0.08, duration: 0.6 }}
+                  >
+                    <SectionCard section={s} onClick={() => router.push(s.route)} />
+                  </motion.div>
+                ))}
+              </div>
+
+              {bottomSection && (
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.76, duration: 0.6 }}
+                >
+                  <SectionCard section={bottomSection} onClick={() => router.push(bottomSection.route)} />
+                </motion.div>
+              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="absolute bottom-6 left-6 z-30 border border-white/12 bg-black/18 px-3 py-1 text-[9px] uppercase tracking-[0.3em] text-white/58 backdrop-blur-md">
-        Noir lacquer · Brushed brass · Quiet light
+      {/* ===== BOTTOM BAR ===== */}
+      <div className="absolute inset-x-0 bottom-0 z-30 flex items-center justify-between border-t border-[#C9A84C]/22 bg-[rgba(10,8,16,0.88)] px-4 py-3 backdrop-blur-md sm:px-6">
+        <div className="text-[10px] uppercase tracking-[0.28em] text-white/48">
+          Fremont · CA
+        </div>
+        <Link
+          href="/find-my-dress"
+          className="border border-[#C9A84C]/65 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#F5D87A] transition hover:bg-[#C9A84C]/14"
+          style={{ textShadow: "0 1px 4px rgba(201,168,76,0.5)" }}
+        >
+          ✨ Find My Dress
+        </Link>
+        <Link
+          href="/admin"
+          className="text-[10px] uppercase tracking-[0.28em] text-white/38 hover:text-white/65"
+        >
+          Admin
+        </Link>
       </div>
-
-      <Link
-        href="/find-my-dress"
-        className="absolute bottom-6 left-1/2 z-30 -translate-x-1/2 border border-[#b99858]/60 bg-black/16 px-4 py-1 text-[9px] uppercase tracking-[0.28em] text-[#e2c891] backdrop-blur-md"
-      >
-        Find My Dress AI
-      </Link>
-
-      <button
-        type="button"
-        onClick={() => setSoundEnabled((value) => !value)}
-        className={`absolute bottom-6 right-6 z-30 border px-3 py-1 text-[9px] uppercase tracking-[0.28em] backdrop-blur-md transition ${soundEnabled ? "border-[#c6a45f] bg-[#9e7d3a]/12 text-[#ecd5a4]" : "border-white/12 bg-black/18 text-white/58"}`}
-      >
-        Magical music {soundEnabled ? "On" : "Off"}
-      </button>
     </div>
   );
 }
