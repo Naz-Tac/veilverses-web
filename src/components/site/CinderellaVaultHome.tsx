@@ -122,10 +122,10 @@ function SceneController({
 
     if (leftDoorRef.current && rightDoorRef.current) {
       const hinge = cameraProgressRef.current;
-      leftDoorRef.current.rotation.y = THREE.MathUtils.lerp(leftDoorRef.current.rotation.y, -Math.PI * 0.88 * hinge, 0.05);
-      rightDoorRef.current.rotation.y = THREE.MathUtils.lerp(rightDoorRef.current.rotation.y, Math.PI * 0.88 * hinge, 0.05);
-      leftDoorRef.current.position.x = THREE.MathUtils.lerp(leftDoorRef.current.position.x, -1.92 - hinge * 0.16, 0.04);
-      rightDoorRef.current.position.x = THREE.MathUtils.lerp(rightDoorRef.current.position.x, 1.92 + hinge * 0.16, 0.04);
+      leftDoorRef.current.rotation.y = THREE.MathUtils.lerp(leftDoorRef.current.rotation.y, -Math.PI * 0.72 * hinge, 0.05);
+      rightDoorRef.current.rotation.y = THREE.MathUtils.lerp(rightDoorRef.current.rotation.y, Math.PI * 0.72 * hinge, 0.05);
+      leftDoorRef.current.position.x = THREE.MathUtils.lerp(leftDoorRef.current.position.x, -1.34 - hinge * 0.1, 0.04);
+      rightDoorRef.current.position.x = THREE.MathUtils.lerp(rightDoorRef.current.position.x, 1.34 + hinge * 0.1, 0.04);
     }
 
     if (doorGlowRef.current) {
@@ -149,11 +149,11 @@ function CursorTrail({ sparks }: { sparks: CursorSpark[] }) {
         {sparks.map((spark) => (
           <motion.span
             key={spark.id}
-            initial={{ opacity: 0.95, scale: 0.35, x: spark.x, y: spark.y }}
-            animate={{ opacity: 0, scale: 1.9, x: spark.x + 8, y: spark.y - 8 }}
+            initial={{ opacity: 0.55, scale: 0.25, x: spark.x, y: spark.y }}
+            animate={{ opacity: 0, scale: 1.2, x: spark.x + 5, y: spark.y - 5 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.9, ease: "easeOut" }}
-            className="absolute left-0 top-0 block h-2 w-2 rounded-full bg-[radial-gradient(circle,rgba(255,248,214,1)_0%,rgba(201,168,76,0.9)_28%,rgba(201,168,76,0)_70%)] blur-[1px]"
+            transition={{ duration: 1.05, ease: "easeOut" }}
+            className="absolute left-0 top-0 block h-1.5 w-1.5 rounded-full bg-[radial-gradient(circle,rgba(250,236,198,0.9)_0%,rgba(176,140,64,0.45)_35%,rgba(176,140,64,0)_74%)] blur-[0.5px]"
           />
         ))}
       </AnimatePresence>
@@ -174,24 +174,20 @@ function OpeningLogo({ isOpen }: { isOpen: boolean }) {
         >
           <div className="text-center">
             <motion.div
-              animate={{ filter: ["drop-shadow(0 0 12px rgba(201,168,76,.35))", "drop-shadow(0 0 24px rgba(255,234,180,.75))", "drop-shadow(0 0 12px rgba(201,168,76,.35))"] }}
-              transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut" }}
-              className="mx-auto flex h-36 w-36 items-center justify-center rounded-full border border-[#d6b86e]/25 bg-black/10"
+              animate={{ filter: ["drop-shadow(0 0 8px rgba(178,140,62,.22))", "drop-shadow(0 0 14px rgba(230,200,136,.35))", "drop-shadow(0 0 8px rgba(178,140,62,.22))"] }}
+              transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut" }}
+              className="mx-auto flex h-28 w-28 items-center justify-center rounded-full border border-[#c5a76a]/20 bg-black/18"
             >
               <div className="flex flex-col items-center">
-                <div className="text-4xl font-semibold tracking-[0.28em] text-[#f7e2b6]">V&amp;V</div>
-                <svg viewBox="0 0 80 110" className="mt-2 h-24 w-20">
-                  <path d="M40 12 C33 26, 26 36, 22 51 C18 68, 20 90, 40 100 C60 90, 62 68, 58 51 C54 36, 47 26, 40 12 Z" fill="none" stroke="#d8b862" strokeWidth="2.4" />
-                  <path d="M31 56 C36 49, 44 49, 49 56" fill="none" stroke="#f8e8bf" strokeWidth="1.8" strokeLinecap="round" />
-                  <path d="M40 20 L40 56" stroke="#f8e8bf" strokeWidth="1.4" strokeLinecap="round" />
-                </svg>
+                <div className="text-[44px] leading-none font-medium italic tracking-[0.03em] text-[#f3ddb1] [font-family:'Snell_Roundhand','Apple_Chancery','URW_Chancery_L',cursive]">V&amp;V</div>
+                <div className="mt-1 h-px w-16 bg-gradient-to-r from-transparent via-[#c9a84c]/70 to-transparent" />
               </div>
             </motion.div>
             <motion.p
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.45 }}
-              className="mt-6 text-sm uppercase tracking-[0.48em] text-[#f3dfab]"
+              className="mt-5 text-[10px] uppercase tracking-[0.4em] text-[#d8bc82]/88"
             >
               Your story begins here...
             </motion.p>
@@ -214,49 +210,37 @@ function DoorCrescent({ side }: { side: "left" | "right" }) {
 
   return (
     <group ref={ref}>
-      <mesh position={[0, 0, 0.07]}>
-        <boxGeometry args={[3.95, 8.65, 0.22]} />
-        <meshStandardMaterial color="#15110d" roughness={0.9} metalness={0.08} emissive="#8e6d1e" emissiveIntensity={0.18} />
+      <mesh position={[0, 0, 0.03]}>
+        <boxGeometry args={[2.78, 6.3, 0.16]} />
+        <meshStandardMaterial color="#120f0d" roughness={0.92} metalness={0.05} emissive="#7f6122" emissiveIntensity={0.08} />
+      </mesh>
+      <mesh position={[0, 0, 0.1]}>
+        <boxGeometry args={[2.6, 6.08, 0.05]} />
+        <meshStandardMaterial color="#1d1713" roughness={0.84} metalness={0.11} />
+      </mesh>
+      <mesh position={[0, 0, 0.13]}>
+        <boxGeometry args={[2.36, 5.82, 0.03]} />
+        <meshBasicMaterial color="#c8a35b" transparent opacity={0.045} />
+      </mesh>
+      <mesh position={[0, 2.58, 0.15]}>
+        <planeGeometry args={[1.86, 0.18]} />
+        <meshBasicMaterial color="#d7bc71" transparent opacity={0.14} />
+      </mesh>
+      <mesh position={[0, -2.58, 0.15]}>
+        <planeGeometry args={[1.72, 0.14]} />
+        <meshBasicMaterial color="#d7bc71" transparent opacity={0.11} />
+      </mesh>
+      <mesh position={[-0.82, 0, 0.16]}>
+        <boxGeometry args={[0.04, 5.28, 0.06]} />
+        <meshStandardMaterial color="#e2c278" roughness={0.34} metalness={0.9} />
+      </mesh>
+      <mesh position={[0.86, 0.06, 0.2]}>
+        <sphereGeometry args={[0.08, 20, 20]} />
+        <meshStandardMaterial color="#f0dcb0" roughness={0.22} metalness={0.92} emissive="#c9a84c" emissiveIntensity={0.1} />
       </mesh>
       <mesh position={[0, 0, 0.17]}>
-        <boxGeometry args={[3.55, 8.25, 0.06]} />
-        <meshStandardMaterial color="#241b13" roughness={0.76} metalness={0.16} />
-      </mesh>
-      <mesh position={[0, 0, 0.21]}>
-        <boxGeometry args={[3.12, 7.82, 0.04]} />
-        <meshBasicMaterial color="#c9a84c" transparent opacity={0.08} />
-      </mesh>
-      <mesh position={[0, 3.45, 0.24]}>
-        <planeGeometry args={[2.5, 0.65]} />
-        <meshBasicMaterial color="#d7bc71" transparent opacity={0.12} />
-      </mesh>
-      <mesh position={[0, -3.25, 0.24]}>
-        <planeGeometry args={[2.35, 0.55]} />
-        <meshBasicMaterial color="#d7bc71" transparent opacity={0.1} />
-      </mesh>
-      <mesh position={[-1.23, 0, 0.28]}>
-        <boxGeometry args={[0.12, 7.3, 0.12]} />
-        <meshStandardMaterial color="#f0d690" roughness={0.2} metalness={0.95} />
-      </mesh>
-      <mesh position={[1.12, 0.2, 0.29]}>
-        <sphereGeometry args={[0.18, 24, 24]} />
-        <meshStandardMaterial color="#f3ddad" roughness={0.12} metalness={0.98} emissive="#c9a84c" emissiveIntensity={0.3} />
-      </mesh>
-      <mesh position={[0, 0.9, 0.3]}>
-        <cylinderGeometry args={[0.05, 0.11, 1.1, 18]} />
-        <meshStandardMaterial color="#edd48c" roughness={0.15} metalness={0.98} />
-      </mesh>
-      <mesh position={[0, 0.9, 0.33]}>
-        <sphereGeometry args={[0.12, 20, 20]} />
-        <meshBasicMaterial color="#fff2c8" transparent opacity={0.35} />
-      </mesh>
-      <mesh position={[0, 0.9, 0.38]}>
-        <planeGeometry args={[2.5, 6.8]} />
-        <meshBasicMaterial color="#f7e1aa" transparent opacity={0.05} />
-      </mesh>
-      <mesh position={[0, -0.5, 0.31]}>
-        <torusGeometry args={[0.44, 0.03, 16, 36]} />
-        <meshBasicMaterial color="#f6e2b2" transparent opacity={0.12} />
+        <planeGeometry args={[2.22, 5.6]} />
+        <meshBasicMaterial color="#f7e1aa" transparent opacity={0.026} />
       </mesh>
     </group>
   );
@@ -264,12 +248,12 @@ function DoorCrescent({ side }: { side: "left" | "right" }) {
 
 function DoorOpeningBursts() {
   const points = useMemo(() => {
-    const array = new Float32Array(300 * 3);
-    for (let index = 0; index < 300; index += 1) {
+    const array = new Float32Array(160 * 3);
+    for (let index = 0; index < 160; index += 1) {
       const angle = Math.random() * Math.PI * 2;
-      const radius = 2.8 + Math.random() * 0.7;
+      const radius = 1.9 + Math.random() * 0.5;
       array[index * 3] = Math.cos(angle) * radius;
-      array[index * 3 + 1] = (Math.random() - 0.5) * 7.8;
+      array[index * 3 + 1] = (Math.random() - 0.5) * 5.6;
       array[index * 3 + 2] = Math.sin(angle) * 0.25;
     }
     return array;
@@ -280,7 +264,7 @@ function DoorOpeningBursts() {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[points, 3]} />
       </bufferGeometry>
-      <pointsMaterial color="#f7d978" size={0.06} transparent opacity={0.85} />
+      <pointsMaterial color="#d8ba79" size={0.032} transparent opacity={0.5} />
     </points>
   );
 }
@@ -467,7 +451,7 @@ function VaultScene({
   const sectionBurst = burst ? <Sparkles key={burst.seed} count={burst.seed % 2 === 0 ? 160 : 120} scale={[2.4, 2.4, 2.4]} size={2} speed={0.4} color={burst.color} position={burst.position} /> : null;
 
   return (
-    <Canvas shadows dpr={[1, 1.8]} camera={{ position: [0, 1.95, 16.6], fov: 36 }}>
+    <Canvas shadows dpr={[1, 1.8]} camera={{ position: [0, 1.95, 17.4], fov: 33 }}>
       <SceneController
         isDoorOpen={isDoorOpen}
         leftDoorRef={leftDoorRef}
@@ -480,64 +464,61 @@ function VaultScene({
         loadReadyRef={loadReadyRef}
         onLoadReady={onLoadReady}
       />
-      <color attach="background" args={["#000000"]} />
-      <fog attach="fog" args={["#000000", 11, 28]} />
-      <ambientLight intensity={0.08} color="#68501a" />
-      <pointLight position={[0, 5.5, 2]} intensity={0.8} color="#f3cf82" />
-      <spotLight position={[0, 7.4, 4]} angle={0.28} intensity={2.5} penumbra={0.55} color="#ffd98f" castShadow />
-      <pointLight position={[-5, 1, 1]} intensity={0.45} color="#c9a84c" />
-      <pointLight position={[5, 1, 1]} intensity={0.45} color="#c9a84c" />
+      <color attach="background" args={["#070605"]} />
+      <fog attach="fog" args={["#070605", 12.5, 31]} />
+      <ambientLight intensity={0.06} color="#584728" />
+      <pointLight position={[0, 5.1, 2.4]} intensity={0.45} color="#d6b77c" />
+      <spotLight position={[0, 7, 4.8]} angle={0.21} intensity={1.4} penumbra={0.62} color="#e7ca94" castShadow />
+      <pointLight position={[-5, 1, 1]} intensity={0.22} color="#b59452" />
+      <pointLight position={[5, 1, 1]} intensity={0.22} color="#b59452" />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.72, 0]} receiveShadow>
         <planeGeometry args={[64, 64]} />
-        <meshStandardMaterial color="#141111" roughness={0.42} metalness={0.44} />
+        <meshStandardMaterial color="#100e0d" roughness={0.52} metalness={0.34} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -3.71, 0.01]} receiveShadow>
         <planeGeometry args={[64, 64]} />
-        <meshStandardMaterial color="#7f7261" roughness={0.12} metalness={0.55} transparent opacity={0.15} />
+        <meshStandardMaterial color="#5f5245" roughness={0.16} metalness={0.42} transparent opacity={0.08} />
       </mesh>
 
-      <group position={[0, 0, 0]}>
-        <mesh position={[0, 4.55, 0.55]}>
-          <cylinderGeometry args={[0.03, 0.03, 0.7, 16]} />
-          <meshStandardMaterial color="#fde8b2" emissive="#f8d782" emissiveIntensity={0.8} metalness={0.45} roughness={0.2} />
+      <group position={[0, 0, 0]} scale={[0.7, 0.7, 0.7]}>
+        <mesh position={[0, 3.95, 0.3]}>
+          <cylinderGeometry args={[0.015, 0.015, 0.34, 14]} />
+          <meshStandardMaterial color="#e6cb93" emissive="#b8924c" emissiveIntensity={0.2} metalness={0.3} roughness={0.32} />
         </mesh>
-        <mesh position={[0, 5.15, 0.58]}>
-          <sphereGeometry args={[0.36, 28, 28]} />
-          <meshStandardMaterial color="#fff4d1" emissive="#f6d57d" emissiveIntensity={1.15} metalness={0.12} roughness={0.12} />
+        <mesh position={[0, 4.22, 0.31]}>
+          <sphereGeometry args={[0.13, 20, 20]} />
+          <meshStandardMaterial color="#ead8b1" emissive="#ba9552" emissiveIntensity={0.32} metalness={0.08} roughness={0.26} />
         </mesh>
-        <mesh position={[0, 5.12, 0.58]}>
-          <sphereGeometry args={[0.78, 30, 30]} />
-          <meshBasicMaterial color="#ffd779" transparent opacity={0.12} />
+        <mesh position={[0, 4.22, 0.31]}>
+          <sphereGeometry args={[0.34, 24, 24]} />
+          <meshBasicMaterial color="#d9b873" transparent opacity={0.05} />
         </mesh>
-        <mesh position={[0, 5.78, 0.54]}>
-          <torusGeometry args={[1.25, 0.1, 18, 72]} />
-          <meshStandardMaterial color="#ddc06c" emissive="#b88d2d" emissiveIntensity={0.35} metalness={0.95} roughness={0.12} />
+        <mesh position={[0, 4.5, 0.3]}>
+          <torusGeometry args={[0.52, 0.026, 16, 54]} />
+          <meshStandardMaterial color="#c5a462" emissive="#967436" emissiveIntensity={0.18} metalness={0.88} roughness={0.24} />
         </mesh>
-      </group>
-
-      <group>
-        <group ref={leftDoorRef} position={[-1.92, 0, 0]}>
+        <group ref={leftDoorRef} position={[-1.34, 0, 0]}>
           <DoorCrescent side="left" />
         </group>
-        <group ref={rightDoorRef} position={[1.92, 0, 0]}>
+        <group ref={rightDoorRef} position={[1.34, 0, 0]}>
           <DoorCrescent side="right" />
         </group>
       </group>
 
-      <mesh ref={doorGlowRef} position={[0, 0, 0.2]}>
-        <boxGeometry args={[4.2, 8.7, 0.06]} />
-        <meshBasicMaterial color="#ffd97c" transparent opacity={0.2} />
+      <mesh ref={doorGlowRef} position={[0, 0, 0.15]}>
+        <boxGeometry args={[3.02, 6.5, 0.04]} />
+        <meshBasicMaterial color="#e6c17a" transparent opacity={0.08} />
       </mesh>
 
-      <Html center position={[0, -0.28, 0.35]} transform occlude>
+      <Html center position={[0, -0.18, 0.27]} transform occlude>
         <motion.button
           type="button"
           onClick={onDoorOpen}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: isDoorOpen ? 0 : 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.55 }}
-          className="rounded-full border border-[#f4d978]/55 bg-black/30 px-8 py-3 text-[11px] uppercase tracking-[0.45em] text-[#f7e2b0] backdrop-blur-sm transition hover:bg-black/45"
+          className="border border-[#c7a668]/75 bg-black/12 px-4 py-1.5 text-[9px] font-medium uppercase tracking-[0.28em] text-[#ddc08a] backdrop-blur-[1.5px] transition hover:bg-black/22"
         >
           Enter The Vault
         </motion.button>
@@ -547,12 +528,12 @@ function VaultScene({
 
       <mesh position={[0, 0, -5.35]}>
         <boxGeometry args={[10.4, 8.4, 0.06]} />
-        <meshStandardMaterial color="#0f0e0d" roughness={0.92} metalness={0.06} transparent opacity={0.25} />
+        <meshStandardMaterial color="#0d0c0b" roughness={0.94} metalness={0.04} transparent opacity={0.22} />
       </mesh>
 
       <mesh position={[0, 0, -5.28]}>
         <boxGeometry args={[10.1, 8.1, 0.05]} />
-        <meshStandardMaterial color="#191410" roughness={0.82} metalness={0.1} transparent opacity={0.82} />
+        <meshStandardMaterial color="#151210" roughness={0.85} metalness={0.08} transparent opacity={0.84} />
       </mesh>
 
       {isDoorOpen && collections.map((section) => (
@@ -572,7 +553,7 @@ function VaultScene({
       ))}
 
       {isDoorOpen && (
-        <Sparkles count={260} scale={[18, 10, 10]} size={1.8} speed={0.28} color="#f0cc72" />
+        <Sparkles count={120} scale={[16, 9, 9]} size={1.1} speed={0.16} color="#ccae71" />
       )}
 
       {burst && <DoorOpeningBursts key={burst.seed} />}
@@ -639,7 +620,7 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
       const nextId = sparkIdRef.current += 1;
       setCursorSparks((current) => {
         const next = [...current, { id: nextId, x: event.clientX, y: event.clientY }];
-        return next.slice(-26);
+        return next.slice(-14);
       });
     };
 
@@ -659,7 +640,7 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
   }, []);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-black text-white">
+    <div className="relative h-screen w-full overflow-hidden bg-[#070605] text-white">
       <CursorTrail sparks={cursorSparks} />
       <VaultScene
         collections={collections}
@@ -682,23 +663,23 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.8 }}
-            className="pointer-events-none absolute inset-x-0 bottom-20 z-20 flex justify-center px-6 text-center"
+            className="pointer-events-none absolute inset-x-0 bottom-24 z-20 flex justify-center px-8 text-center"
           >
             <div>
-              <p className="text-xs uppercase tracking-[0.48em] text-[#e1c16c]">Your story begins here...</p>
-              <p className="mt-4 max-w-lg text-sm leading-7 text-white/65">A fairy-tale wardrobe of bridal dreams opens with gold dust, marble reflections, and a magical glow.</p>
+              <p className="text-[10px] uppercase tracking-[0.42em] text-[#cfb176]">Your story begins here...</p>
+              <p className="mt-3 max-w-xl text-[13px] leading-7 text-[#f3e6ce]/58">A quiet world of couture silhouettes, polished brass, and soft light awaits behind the doors.</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="absolute bottom-5 left-5 z-30 rounded-full border border-white/10 bg-black/30 px-4 py-2 text-[10px] uppercase tracking-[0.34em] text-white/70 backdrop-blur-md">
-        Pure black · Gold dust · Marble floor
+      <div className="absolute bottom-6 left-6 z-30 border border-white/12 bg-black/18 px-3 py-1 text-[9px] uppercase tracking-[0.3em] text-white/58 backdrop-blur-md">
+        Noir lacquer · Brushed brass · Quiet light
       </div>
 
       <Link
         href="/find-my-dress"
-        className="absolute bottom-5 left-1/2 z-30 -translate-x-1/2 rounded-full border border-[#c9a84c]/55 bg-black/30 px-5 py-2 text-[10px] uppercase tracking-[0.34em] text-[#f7e8bb] backdrop-blur-md"
+        className="absolute bottom-6 left-1/2 z-30 -translate-x-1/2 border border-[#b99858]/60 bg-black/16 px-4 py-1 text-[9px] uppercase tracking-[0.28em] text-[#e2c891] backdrop-blur-md"
       >
         Find My Dress AI
       </Link>
@@ -706,7 +687,7 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
       <button
         type="button"
         onClick={() => setSoundEnabled((value) => !value)}
-        className={`absolute bottom-5 right-5 z-30 rounded-full border px-4 py-2 text-[10px] uppercase tracking-[0.34em] backdrop-blur-md transition ${soundEnabled ? "border-[#e3c05f] bg-[#c9a84c]/14 text-[#ffecc2]" : "border-white/10 bg-black/30 text-white/60"}`}
+        className={`absolute bottom-6 right-6 z-30 border px-3 py-1 text-[9px] uppercase tracking-[0.28em] backdrop-blur-md transition ${soundEnabled ? "border-[#c6a45f] bg-[#9e7d3a]/12 text-[#ecd5a4]" : "border-white/12 bg-black/18 text-white/58"}`}
       >
         Magical music {soundEnabled ? "On" : "Off"}
       </button>
