@@ -8,5 +8,4 @@ export type CollectionSection = {
   position: [number, number, number];
   size: [number, number, number];
   route: string;
-  accent: string;
 };

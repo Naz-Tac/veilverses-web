@@ -228,7 +228,7 @@ function SectionCard({ section, onClick }: { section: CollectionSection; onClick
           : "0 2px 10px rgba(0,0,0,0.45)",
       }}
     >
-      {/* gold corner accents */}
+      {/* gold corner details */}
       <div className="pointer-events-none absolute left-0 top-0 h-3 w-3 border-l-2 border-t-2 border-[#C9A84C]" />
       <div className="pointer-events-none absolute right-0 top-0 h-3 w-3 border-r-2 border-t-2 border-[#C9A84C]" />
       <div className="pointer-events-none absolute bottom-0 left-0 h-3 w-3 border-b-2 border-l-2 border-[#C9A84C]" />
@@ -368,7 +368,8 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
               initial={{ opacity: 0, scale: 0.94 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 1, delay: 0.38 }}
-              className="relative mx-auto w-[min(280px,70vw)] cursor-pointer border-0 bg-transparent p-0 disabled:cursor-not-allowed"
+              aria-label="Enter the vault"
+              className="relative mx-auto w-[min(250px,66vw)] cursor-pointer border-0 bg-transparent p-0 disabled:cursor-not-allowed"
               style={{ perspective: "900px" }}
             >
               {/* outer gold frame */}
@@ -396,7 +397,7 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
                 </div>
 
                 {/* two door panels */}
-                <div className="relative flex h-[280px] sm:h-[340px]" style={{ transformStyle: "preserve-3d" }}>
+                <div className="relative flex h-[240px] sm:h-[300px]" style={{ transformStyle: "preserve-3d" }}>
                   {/* golden seam glow */}
                   <motion.div
                     animate={{
@@ -441,7 +442,7 @@ export function CinderellaVaultHome({ collections }: CinderellaVaultHomeProps) {
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.8 }}
-              className="mt-6 flex flex-col items-center gap-2.5"
+              className="mt-4 flex flex-col items-center gap-2.5"
             >
               <button
                 type="button"

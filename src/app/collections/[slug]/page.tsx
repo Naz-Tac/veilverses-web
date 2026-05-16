@@ -58,14 +58,15 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
     : Array(6).fill(null);
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#2a241b_0%,#090808_50%,#050404_100%)] px-6 py-10 text-white">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 rounded-[2rem] border border-white/10 bg-black/20 p-8 backdrop-blur-md md:p-12">
-        <Link
-          href="/"
-          className="w-fit text-xs uppercase tracking-[0.38em] text-[#e2c66b]/75 transition hover:text-[#e2c66b]"
-        >
-          ← THE VAULT
-        </Link>
+    <main className="relative min-h-screen bg-[radial-gradient(circle_at_top,#2a241b_0%,#090808_50%,#050404_100%)] px-6 py-10 text-white">
+      <Link
+        href="/"
+        className="absolute left-6 top-6 z-20 w-fit text-xs uppercase tracking-[0.38em] text-[#e2c66b]/75 transition hover:text-[#e2c66b]"
+      >
+        ← THE VAULT
+      </Link>
+
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-8 rounded-[2rem] border border-white/10 bg-black/20 p-8 pt-16 backdrop-blur-md md:p-12 md:pt-16">
         <div>
           <p className="text-xs uppercase tracking-[0.45em] text-[#e2c56a]">The Vault</p>
           <h1 className="mt-4 font-serif text-5xl text-[#fff8df] md:text-6xl">{collection.label}</h1>
@@ -91,11 +92,6 @@ export default async function CollectionPage({ params }: { params: Promise<{ slu
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <Link href="/" className="rounded-full border border-[#e2c66b]/50 px-6 py-3 text-xs uppercase tracking-[0.38em] text-[#f8eabf] transition hover:bg-[#e2c66b]/10">
-            Return to The Vault
-          </Link>
-        </div>
       </div>
     </main>
   );

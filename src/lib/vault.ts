@@ -9,7 +9,6 @@ export const VAULT_COLLECTIONS: CollectionSection[] = [
     position: [0, 3.05, 0],
     size: [3.85, 0.9, 0.3],
     route: "/collections/accessories",
-    accent: "#f2f4fb",
   },
   {
     key: "bridal",
@@ -19,7 +18,6 @@ export const VAULT_COLLECTIONS: CollectionSection[] = [
     position: [-2.35, -0.18, 0],
     size: [2.0, 3.25, 0.3],
     route: "/collections/bridal",
-    accent: "#f7f2e4",
   },
   {
     key: "quinceanera",
@@ -29,7 +27,6 @@ export const VAULT_COLLECTIONS: CollectionSection[] = [
     position: [0, -0.18, 0],
     size: [2.25, 3.6, 0.3],
     route: "/collections/quinceanera",
-    accent: "#ef9ebc",
   },
   {
     key: "prom-formal",
@@ -39,7 +36,6 @@ export const VAULT_COLLECTIONS: CollectionSection[] = [
     position: [2.35, -0.18, 0],
     size: [2.0, 3.15, 0.3],
     route: "/collections/prom-formal",
-    accent: "#f3c77a",
   },
   {
     key: "evening",
@@ -49,7 +45,6 @@ export const VAULT_COLLECTIONS: CollectionSection[] = [
     position: [4.45, -0.18, 0],
     size: [2.0, 3.15, 0.3],
     route: "/collections/evening",
-    accent: "#caa7f2",
   },
   {
     key: "shoes-bags",
@@ -59,6 +54,5 @@ export const VAULT_COLLECTIONS: CollectionSection[] = [
     position: [0, -2.88, 0],
     size: [3.95, 1.0, 0.3],
     route: "/collections/shoes-bags",
-    accent: "#dfe5f4",
   },
 ];
